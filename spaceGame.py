@@ -55,6 +55,7 @@ def shipOutside():
     game_display.blit(shipOutsideImg, shipOutsideImg_rect)
 
 def showMenu(menu_to_show):
+    shipInside()
     pg.draw.rect(game_display, menu_black, menuLeft_rect) # left bar
     pg.draw.rect(game_display, menu_black, menuBot_rect) # bottom bar
     menu_options_btn.draw()
@@ -94,8 +95,11 @@ def changeShipName(new_ship_name):
 def showOptions():
     print('new HERE')
     showTravelMenu()
+    print('new HERE')
     pg.draw.rect(game_display, options_black, options_rect)
+    print('new HERE')
     options_quit_btn.draw()
+    update()
 
     keep_options = True
 
@@ -266,12 +270,14 @@ def mainLoop():
                                         else:
                                             too_long_name_text = 'Name is too long!'
                                             changeShipName(too_long_name_text)
-                                            update(menu_to_show)
+                                            update()
+                                            showMenu(menu_to_show)
                                             t.sleep(0.5)
                                             changeShipName(new_ship_name)
 
                                     changeShipName(new_ship_name)
-                            update(menu_to_show)
+                            update()
+                            showMenu(menu_to_show)
                         menu_to_show = ''
 
                     elif menu_hp_bar.background_bar.collidepoint(mpos):
@@ -304,12 +310,11 @@ def mainLoop():
                         menu_hp_bar.change_current_sub(1)
                     elif menu_xp_bar.background_bar.collidepoint(mpos):
                         menu_xp_bar.change_current_sub(1)
-            update(menu_to_show)
+            update()
+            showMenu(menu_to_show)
 
 
-def update(menu_to_show):
-    shipInside()
-    showMenu(menu_to_show)
+def update():
 
     pg.display.update()
     clock.tick(60)
