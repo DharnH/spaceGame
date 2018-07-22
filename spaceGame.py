@@ -15,13 +15,7 @@ menu_black = (16,16,16)
 options_black = (33, 33, 33)
 
 
-
-
-
 available_characters = list(map(chr, range(33, 126)))
-
-
-
 
 
 display_width = 1600
@@ -29,10 +23,6 @@ display_height = 900
 game_display = pg.display.set_mode((display_width, display_height))
 pg.display.set_caption("spaceGame")
 clock = pg.time.Clock()
-
-
-
-
 
 
 
@@ -68,21 +58,75 @@ def changeMenu(menu_to_show):
         showOptions()
 
     else:
-        showTravelMenu()
+        showSidebarMenu()
 
-def showTravelMenu():
+
+def showSidebarMenu():
     name_label_custom.draw()
-    menu_planet_btn.draw()
 
     menu_hp_bar.draw()
     menu_xp_bar.draw()
 
+def showTravelMenu():
+    menu_planet_btn.draw()
+
     menu_crew_btn.draw()
 
-def showChangeNameMenu():
-    showTravelMenu()
+def showChangeNameMenu():  #TODO: REFINE WHERE WHAT DOES
+    showSidebarMenu()
     input_name_rect.draw()
     input_name_label.draw()
+
+    update()
+
+    input_name_done = False
+    new_ship_name = ''
+    changeShipName(new_ship_name)
+    input_name_label.draw()
+    name_label_custom.draw()
+    while not input_name_done:
+        for ev in pg.event.get():
+            if ev.type == pg.QUIT:
+                input_name_done= True
+                end_game.change_state(True)
+
+            elif ev.type == pg.MOUSEBUTTONUP:
+                print('1')
+                mpos = pg.mouse.get_pos()
+                if not input_name_rect.rect.collidepoint(mpos):
+                    input_name_done = True
+            elif ev.type == pg.KEYDOWN:
+                print('2')
+                if ev.key == pg.K_RETURN:
+                    print('Actually Enter')
+                    input_name_done = True
+                elif ev.key == pg.K_BACKSPACE:
+                    if len(new_ship_name) > 0:
+                        new_ship_name = new_ship_name[:-1]
+                elif ev.key == pg.K_DELETE:
+                    new_ship_name = ''
+                else:
+                    text_font = ImageFont.truetype('arial.ttf', name_label_custom.size)
+                    current_textW, current_textH = text_font.getsize(new_ship_name)
+                    letterW, letterH = text_font.getsize(ev.unicode)
+
+                    if current_textW + letterW < name_label_custom.rectW - (name_label_custom.rectW / 10):
+                        new_ship_name += ev.unicode
+                    else:
+                        too_long_name_text = 'Name is too long!'
+                        changeShipName(too_long_name_text)
+                        update()
+                        t.sleep(0.5)
+                        changeShipName(new_ship_name)
+                        update()
+            changeShipName(new_ship_name)
+        input_name_label.draw()
+        name_label_custom.draw()
+        update()
+
+
+
+
 
 
 def changeShipName(new_ship_name):
@@ -92,7 +136,7 @@ def changeShipName(new_ship_name):
 
 
 def showOptions():
-    showTravelMenu()
+    showSidebarMenu()
     pg.draw.rect(game_display, options_black, options_rect)
     options_quit_btn.draw()
     update()
@@ -235,46 +279,7 @@ def mainLoop():
                         menu_to_show = 'keep_options'
 
                     elif name_label_custom.rect.collidepoint(mpos):
-                        input_name_done = False
-                        new_ship_name = ''
                         menu_to_show = 'change_name'
-                        while not input_name_done:
-                            for ev in pg.event.get():
-                                if ev.type == pg.QUIT:
-                                    input_name_done= True
-                                    end_game.change_state(True)
-
-                                elif ev.type == pg.MOUSEBUTTONUP:
-                                    if not input_name_rect.rect.collidepoint(mpos):
-                                        input_name_done = True
-                                elif ev.type == pg.KEYDOWN:
-                                    if ev.key == pg.K_RETURN:
-                                        print('Actually Enter')
-                                        input_name_done = True
-                                    elif ev.key == pg.K_BACKSPACE:
-                                        if len(new_ship_name) > 0:
-                                            new_ship_name = new_ship_name[:-1]
-                                    elif ev.key == pg.K_DELETE:
-                                        new_ship_name = ''
-                                    else:
-                                        text_font = ImageFont.truetype('arial.ttf', name_label_custom.size)
-                                        current_textW, current_textH = text_font.getsize(new_ship_name)
-                                        letterW, letterH = text_font.getsize(ev.unicode)
-
-                                        if current_textW + letterW < name_label_custom.rectW - (name_label_custom.rectW / 10):
-                                            new_ship_name += ev.unicode
-                                        else:
-                                            too_long_name_text = 'Name is too long!'
-                                            changeShipName(too_long_name_text)
-                                            update()
-                                            changeMenu(menu_to_show)
-                                            t.sleep(0.5)
-                                            changeShipName(new_ship_name)
-
-                                    changeShipName(new_ship_name)
-                            update()
-                            changeMenu(menu_to_show)
-                        changeMenu('')
 
                     elif menu_hp_bar.background_bar.collidepoint(mpos):
                         menu_hp_bar.change_current_add(15)
@@ -309,11 +314,12 @@ def mainLoop():
                         menu_xp_bar.change_current_sub(1)
             update()
             changeMenu(menu_to_show)
+            menu_to_show = ''
+            changeMenu(menu_to_show)
         update()
 
 
 def update():
-
     pg.display.update()
     clock.tick(60)
     
