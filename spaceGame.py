@@ -54,7 +54,7 @@ def shipOutside():
     game_display.fill(gray)
     game_display.blit(shipOutsideImg, shipOutsideImg_rect)
 
-def showMenu(menu_to_show):
+def changeMenu(menu_to_show):
     shipInside()
     pg.draw.rect(game_display, menu_black, menuLeft_rect) # left bar
     pg.draw.rect(game_display, menu_black, menuBot_rect) # bottom bar
@@ -72,7 +72,6 @@ def showMenu(menu_to_show):
 
 def showTravelMenu():
     name_label_custom.draw()
-    #menu_radar_btn.draw()
     menu_planet_btn.draw()
 
     menu_hp_bar.draw()
@@ -93,11 +92,8 @@ def changeShipName(new_ship_name):
 
 
 def showOptions():
-    print('new HERE')
     showTravelMenu()
-    print('new HERE')
     pg.draw.rect(game_display, options_black, options_rect)
-    print('new HERE')
     options_quit_btn.draw()
     update()
 
@@ -271,14 +267,14 @@ def mainLoop():
                                             too_long_name_text = 'Name is too long!'
                                             changeShipName(too_long_name_text)
                                             update()
-                                            showMenu(menu_to_show)
+                                            changeMenu(menu_to_show)
                                             t.sleep(0.5)
                                             changeShipName(new_ship_name)
 
                                     changeShipName(new_ship_name)
                             update()
-                            showMenu(menu_to_show)
-                        menu_to_show = ''
+                            changeMenu(menu_to_show)
+                        changeMenu('')
 
                     elif menu_hp_bar.background_bar.collidepoint(mpos):
                         menu_hp_bar.change_current_add(15)
@@ -304,6 +300,7 @@ def mainLoop():
                         menu_hp_bar.change_current_add(1)
                     elif menu_xp_bar.background_bar.collidepoint(mpos):
                         menu_xp_bar.change_current_add(1)
+                    update()
 
                 elif ev.button == 5:
                     if menu_hp_bar.background_bar.collidepoint(mpos):
@@ -311,13 +308,15 @@ def mainLoop():
                     elif menu_xp_bar.background_bar.collidepoint(mpos):
                         menu_xp_bar.change_current_sub(1)
             update()
-            showMenu(menu_to_show)
+            changeMenu(menu_to_show)
+        update()
 
 
 def update():
 
     pg.display.update()
     clock.tick(60)
+    
 
 
 startGame()
