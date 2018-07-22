@@ -89,14 +89,11 @@ def showChangeNameMenu():  #TODO: REFINE WHERE WHAT DOES
             if ev.type == pg.QUIT:
                 input_name_done= True
                 end_game.change_state(True)
-
             elif ev.type == pg.MOUSEBUTTONUP:
-                print('1')
                 mpos = pg.mouse.get_pos()
                 if not input_name_rect.rect.collidepoint(mpos):
                     input_name_done = True
             elif ev.type == pg.KEYDOWN:
-                print('2')
                 if ev.key == pg.K_RETURN:
                     print('Actually Enter')
                     input_name_done = True
@@ -115,10 +112,10 @@ def showChangeNameMenu():  #TODO: REFINE WHERE WHAT DOES
                     else:
                         too_long_name_text = 'Name is too long!'
                         changeShipName(too_long_name_text)
+                        input_name_label.draw()
+                        name_label_custom.draw()
                         update()
                         t.sleep(0.5)
-                        changeShipName(new_ship_name)
-                        update()
             changeShipName(new_ship_name)
         input_name_label.draw()
         name_label_custom.draw()
