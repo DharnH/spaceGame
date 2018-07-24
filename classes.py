@@ -135,32 +135,6 @@ class menu_bar(label):
         self.background_bar = pg.Rect(self.background_barX, self.background_barY, self.background_barW, self.background_barH)
         self.front_bar = pg.Rect(self.front_barX, self.front_barY, self.front_barW, self.front_barH)
 
-    def draw(self):
-
-        myfont = pg.font.SysFont(self.font, self.size, self.bold, self.italic)
-
-
-        if self.current_nr > self.max_nr:
-            self.text_with_nr = self.text + '   ' + str(self.current_nr) + ' / ' + str(self.max_nr) + '  ' + self.over_max_text
-
-        else:
-            self.text_with_nr = self.text + '   ' + str(self.current_nr) + ' / ' + str(self.max_nr)
-
-        self.text_to_show = myfont.render(self.text_with_nr, False, self.textC)
-
-        if self.background_barW * (self.current_nr / self.max_nr) > self.background_barW:
-            self.front_barW = self.background_barW
-        else:
-            self.front_barW = self.background_barW * (self.current_nr / self.max_nr)
-        self.front_bar = pg.Rect(self.front_barX, self.front_barY, self.front_barW, self.front_barH)
-
-
-        pg.draw.rect(self.game_display, self.background_barC, self.background_bar)
-        pg.draw.rect(self.game_display, self.front_barC, self.front_bar)
-        self.game_display.blit(self.text_to_show, (self.textX, self.textY))
-
-
-
     def change_current_max(self):
         self.current_nr = self.max_nr
 
@@ -189,6 +163,28 @@ class menu_bar_max(menu_bar):
 
 
 
+
+    def draw(self):
+
+        myfont = pg.font.SysFont(self.font, self.size, self.bold, self.italic)
+
+        self.text_with_nr = self.text + '   ' + str(self.current_nr) + ' / ' + str(self.max_nr)
+
+        self.text_to_show = myfont.render(self.text_with_nr, False, self.textC)
+
+        if self.background_barW * (self.current_nr / self.max_nr) > self.background_barW:
+            self.front_barW = self.background_barW
+        else:
+            self.front_barW = self.background_barW * (self.current_nr / self.max_nr)
+        self.front_bar = pg.Rect(self.front_barX, self.front_barY, self.front_barW, self.front_barH)
+
+
+        pg.draw.rect(self.game_display, self.background_barC, self.background_bar)
+        pg.draw.rect(self.game_display, self.front_barC, self.front_bar)
+        self.game_display.blit(self.text_to_show, (self.textX, self.textY))
+
+
+
 class menu_bar_no_lim(menu_bar):
 
 
@@ -200,6 +196,33 @@ class menu_bar_no_lim(menu_bar):
 
     def change_current_add(self, add_nr):
         self.current_nr += add_nr
+
+
+
+
+    def draw(self):
+
+        myfont = pg.font.SysFont(self.font, self.size, self.bold, self.italic)
+
+
+        if self.current_nr >= self.max_nr:
+            self.text_with_nr = self.text + '   ' + str(self.current_nr) + ' / ' + str(self.max_nr) + '  ' + self.over_max_text
+
+        else:
+            self.text_with_nr = self.text + '   ' + str(self.current_nr) + ' / ' + str(self.max_nr)
+
+        self.text_to_show = myfont.render(self.text_with_nr, False, self.textC)
+
+        if self.background_barW * (self.current_nr / self.max_nr) > self.background_barW:
+            self.front_barW = self.background_barW
+        else:
+            self.front_barW = self.background_barW * (self.current_nr / self.max_nr)
+        self.front_bar = pg.Rect(self.front_barX, self.front_barY, self.front_barW, self.front_barH)
+
+
+        pg.draw.rect(self.game_display, self.background_barC, self.background_bar)
+        pg.draw.rect(self.game_display, self.front_barC, self.front_bar)
+        self.game_display.blit(self.text_to_show, (self.textX, self.textY))
 
 
 class global_var():

@@ -37,28 +37,54 @@ shipOutsideW, shipOutsideH = shipOutsideImg.get_rect().size
 
 
 def shipInside():
-    game_display.fill(gray)
     game_display.blit(shipInsideImg, shipInsideImg_rect)
 
 def shipOutside():
-    game_display.fill(gray)
     game_display.blit(shipOutsideImg, shipOutsideImg_rect)
 
-def changeMenu(menu_to_show):
-    shipInside()
+
+def showMenuTemplate():
+    game_display.fill(gray)
     pg.draw.rect(game_display, menu_black, menuLeft_rect) # left bar
     pg.draw.rect(game_display, menu_black, menuBot_rect) # bottom bar
+
+
+def showMenuBasics():
+    showSidebarMenu()
+    menu_travel_btn.draw()
+    menu_combat_btn.draw()
     menu_options_btn.draw()
 
-    if(menu_to_show == 'combat_menu'):
+
+
+
+def changeBar(bar_to_show):
+
+    if bar_to_show == 'combat_bar':
+        showCombatBar()
+    elif bar_to_show == 'travel_bar':
         pass
+
+
+def showCombatBar():
+    menu_combat_bar_run.draw()
+    menu_combat_bar_attack.draw()
+
+
+
+
+def changeMenu(menu_to_show):
+
+    if(menu_to_show == 'combat_menu'):
+        initComat()
     elif(menu_to_show == 'change_name'):
         showChangeNameMenu()
     elif(menu_to_show == 'keep_options'):
         showOptions()
 
     else:
-        showSidebarMenu()
+        #shipInside()
+        pass
 
 
 def showSidebarMenu():
@@ -67,7 +93,7 @@ def showSidebarMenu():
     menu_hp_bar.draw()
     menu_xp_bar.draw()
 
-def showTravelMenu():
+def showTravelBar():
     menu_planet_btn.draw()
 
     menu_crew_btn.draw()
@@ -95,7 +121,6 @@ def showChangeNameMenu():  #TODO: REFINE WHERE WHAT DOES
                     input_name_done = True
             elif ev.type == pg.KEYDOWN:
                 if ev.key == pg.K_RETURN:
-                    print('Actually Enter')
                     input_name_done = True
                 elif ev.key == pg.K_BACKSPACE:
                     if len(new_ship_name) > 0:
@@ -144,6 +169,7 @@ def showOptions():
         for ev in pg.event.get():
             if ev.type == pg.QUIT:
                 end_game.change_state(True)
+                keep_options = True
 
             elif ev.type == pg.MOUSEBUTTONUP:
                 mpos = pg.mouse.get_pos()
@@ -157,6 +183,39 @@ def showOptions():
 def nextBar(prev_bar_x, prev_bar_W):
     next_bar_x = prev_bar_x + prev_bar_W + 80
     return next_bar_x
+
+
+
+def initComat():
+
+    combat_done = False
+
+    while not combat_done:
+        for ev in pg.event.get():
+            if ev.type == pg.QUIT:
+                end_game.change_state(True)
+                combat_done = True
+
+            elif ev.type == pg.MOUSEBUTTONUP:
+                mpos = pg.mouse.get_pos()
+                if ev.button == 1:
+                    if menu_combat_bar_attack.rect.collidepoint(mpos):
+                        menu_hp_bar.change_current_sub(10)
+
+                    elif menu_options_btn.rect.collidepoint(mpos):
+                        showOptions()
+                        combat_done = True
+
+
+
+
+        showCombatBar()
+        update()
+
+
+
+
+
 
 
 
@@ -230,8 +289,18 @@ menu_planet_btn = cls.buttons(game_display, menuPlanetsX, menuPlanetsY, 250, 90,
 
 menu_crew_btn = cls.buttons(game_display, menuCrewX, menuCrewY, 400, 90, white, '"Crew"', menu_black, 'Arial', 60, True, False)
 menu_options_btn = cls.buttons(game_display, menuOptionsX, menuOptionsY, 200, 45, white, 'Options', menu_black, 'Arial', 30, True, False)
-
 options_quit_btn = cls.buttons(game_display, optionsQuitX, optionsQuitY, 250, 100, white, 'Quit', menu_black, 'Arial', 70, True, False)
+
+
+
+
+menu_travel_btn = cls.buttons(game_display, menuOptionsX, menuOptionsY - 140, 200, 45, white, 'Travel', menu_black, 'Arial', 30, True, False)
+menu_combat_btn = cls.buttons(game_display, menuOptionsX, menuOptionsY - 70, 200, 45, white, 'Attack', menu_black, 'Arial', 30, True, False)
+
+
+
+
+
 
 
 shipInsideImg_rect = shipInsideImg.get_rect(topleft=(xIn,yIn))
@@ -239,9 +308,39 @@ shipOutsideImg_rect = shipOutsideImg.get_rect(topleft=(xOut,yOut))
 
 prev_bar_y = menuShipY
 
-menu_hp_bar = cls.menu_bar_max(game_display, menuShipX, menuShipY + 130, 200, 50, options_black, red, 200, 100, 'Health', white, 'Arial', 20, False, True)
+menu_hp_bar = cls.menu_bar_max(game_display, menuShipX, menuShipY + 130, 240, 50, options_black, red, 200, 100, 'Health', white, 'Arial', 20, False, True)
 
-menu_xp_bar = cls.menu_bar_no_lim(game_display, (menuShipX+ 0), menu_hp_bar.rectY + 130, 200, 50, options_black, green, 200, 100, 'Level Up!', 'XP', white, 'Arial', 20, False, True)
+menu_xp_bar = cls.menu_bar_no_lim(game_display, (menuShipX+ 0), menu_hp_bar.rectY + 130, 240, 50, options_black, green, 200, 100, 'Level Up!', 'XP', white, 'Arial', 20, False, True)
+
+
+
+menu_combat_bar_attackW = 400
+menu_combat_bar_attackH = menuHeight / 2
+menu_combat_bar_attackX = display_width / 30 * 8
+menu_combat_bar_attackY = menuBotY + ((menuHeight - menu_combat_bar_attackH) / 2)
+
+
+menu_combat_bar_runW = 400
+menu_combat_bar_runH = menuHeight / 2
+menu_combat_bar_runX = display_width / 30 * 20
+menu_combat_bar_runY = menuBotY + ((menuHeight - menu_combat_bar_runH) / 2)
+
+
+menu_combat_bar_attack = cls.custom_label_fix_pos_center(game_display, menu_combat_bar_attackX, menu_combat_bar_attackY, menu_combat_bar_attackW, menu_combat_bar_attackH, white, 'Attack', menu_black, 'Arial', 50, True, False)
+menu_combat_bar_run = cls.custom_label_fix_pos_center(game_display, menu_combat_bar_runX, menu_combat_bar_runY, menu_combat_bar_runW, menu_combat_bar_runH, white, 'Run', menu_black, 'Arial', 50, True, False)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 end_game = cls.global_var(False)
 
@@ -264,6 +363,11 @@ def mainLoop():
     menu_to_show = ''
 
 
+
+    showMenuTemplate()
+    showMenuBasics()
+
+
     while not end_game.state:
         for ev in pg.event.get():
             if ev.type == pg.QUIT:
@@ -277,6 +381,9 @@ def mainLoop():
 
                     elif name_label_custom.rect.collidepoint(mpos):
                         menu_to_show = 'change_name'
+
+                    elif menu_combat_btn.rect.collidepoint(mpos): #TODO: CHANGE THE FUNCTIONS TO DRAW MENUS/BARS
+                        changeMenu('combat_menu')
 
                     elif menu_hp_bar.background_bar.collidepoint(mpos):
                         menu_hp_bar.change_current_add(15)
@@ -313,12 +420,17 @@ def mainLoop():
             changeMenu(menu_to_show)
             menu_to_show = ''
             changeMenu(menu_to_show)
+
+            showMenuTemplate()
+            showMenuBasics()
         update()
 
 
 def update():
     pg.display.update()
     clock.tick(60)
+
+    showMenuBasics()
     
 
 
