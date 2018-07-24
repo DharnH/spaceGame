@@ -104,6 +104,31 @@ class custom_label_custom_pos_center(label):
         self.textY = rectY + ((rectH - current_textH) / 3.0)
 
 
+
+class custom_label_custom_pos_custom_text_pos(label):
+
+    def __init__ (self, game_display, rectX, rectY, rectW, rectH, rectC, text, textC, textX, textY, font, size, bold, italic):
+        super().__init__(game_display, rectX, rectY, rectW, rectH, rectC, text, textC, font, size, bold, italic)
+
+
+        text_font = ImageFont.truetype(font.lower() + '.ttf', size)
+        current_textW, current_textH = text_font.getsize(text)
+
+        if textX != 'center':
+            self.textX = textX
+        else:
+            self.textX = rectX + ((rectW - current_textW) / 2.5)
+
+
+        if textY != 'center':
+            self.textY = textY
+        else:
+            self.textY = rectY + ((rectH - current_textH) / 3.0)
+
+
+
+
+
 class menu_bar(label):
 
     def __init__(self, game_display, rectX, rectY, rectW, rectH, rectC, barC, max_nr, current_nr, text, textC, font, size, bold, italic):
@@ -232,3 +257,42 @@ class global_var():
 
     def change_state(self, new_state):
         self.state = new_state
+
+
+
+
+
+
+
+
+
+class combat_enemy():
+
+    def __init__(self, game_display, name, health_max, health_current, level):
+        self.game_display = game_display
+        self.name = name
+        self.health_max = health_max
+        self.health_current = health_current
+        self.level = level
+
+
+
+    def draw(self):
+        myfont = pg.font.SysFont('Arial', 20, False, True)
+
+
+
+    def change_current_add(self, add_nr):
+        self.health_current += add_nr
+
+    def change_current_max(self):
+        self.health_current = self.health_max
+
+    def change_current_set(self, set_nr):
+        self.health_current = set_nr
+
+    def change_current_sub(self, sub_nr):
+        if self.health_current - sub_nr < 0:
+            self.health_current = 0
+        else:
+            self.health_current -= sub_nr

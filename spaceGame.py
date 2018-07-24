@@ -36,6 +36,14 @@ shipOutsideW, shipOutsideH = shipOutsideImg.get_rect().size
 
 
 
+def return_center(start_point, rect_size, object_size):
+    return start_point + ((rect_size - object_size) / 2)
+
+
+
+
+
+
 def shipInside():
     game_display.blit(shipInsideImg, shipInsideImg_rect)
 
@@ -75,11 +83,11 @@ def showCombatBar():
 
 def changeMenu(menu_to_show):
 
-    if(menu_to_show == 'combat_menu'):
-        initComat()
-    elif(menu_to_show == 'change_name'):
+    if menu_to_show == 'combat_menu':
+        initCombat()
+    elif menu_to_show == 'change_name':
         showChangeNameMenu()
-    elif(menu_to_show == 'keep_options'):
+    elif menu_to_show == 'keep_options':
         showOptions()
 
     else:
@@ -98,7 +106,7 @@ def showTravelBar():
 
     menu_crew_btn.draw()
 
-def showChangeNameMenu():  #TODO: REFINE WHERE WHAT DOES
+def showChangeNameMenu():
     showSidebarMenu()
     input_name_rect.draw()
     input_name_label.draw()
@@ -186,7 +194,7 @@ def nextBar(prev_bar_x, prev_bar_W):
 
 
 
-def initComat():
+def initCombat():
 
     combat_done = False
 
@@ -202,14 +210,17 @@ def initComat():
                     if menu_combat_bar_attack.rect.collidepoint(mpos):
                         menu_hp_bar.change_current_sub(10)
 
-                    elif menu_options_btn.rect.collidepoint(mpos):
-                        showOptions()
+                    elif menu_combat_bar_run.rect.collidepoint(mpos):
+                        combat_done = True
+
+                    elif menu_combat_btn.rect.collidepoint(mpos):
                         combat_done = True
 
 
 
 
         showCombatBar()
+        test_combat_rect.draw()
         update()
 
 
@@ -330,7 +341,18 @@ menu_combat_bar_attack = cls.custom_label_fix_pos_center(game_display, menu_comb
 menu_combat_bar_run = cls.custom_label_fix_pos_center(game_display, menu_combat_bar_runX, menu_combat_bar_runY, menu_combat_bar_runW, menu_combat_bar_runH, white, 'Run', menu_black, 'Arial', 50, True, False)
 
 
+test_enemy = cls.combat_enemy(game_display, 'Test', 200, 200, '1')
 
+
+
+
+
+test_rectW = 200
+test_rectH = 500
+test_rectX = display_width / 18 * 15
+test_rectY = display_height / 9
+
+test_combat_rect = cls.custom_label_custom_pos_custom_text_pos(game_display, test_rectX, test_rectY, test_rectW, test_rectH, white, 'name_holder', menu_black, 'center', test_rectY + 20, 'Arial', 25, True, True)
 
 
 
@@ -349,10 +371,6 @@ end_game = cls.global_var(False)
 
 
 def startGame():
-
-    end_game = False
-    keep_options = False
-    ship_name = ''
     shipInside()
     mainLoop()
 
