@@ -1,0 +1,100 @@
+General:
+No fuel system
+Solar power
+
+Start basic ship
+
+
+Start Ship:
+T1 engine
+1 energy/laser weapon
+Standard metal plating
+
+-Rooms:
+ Pilot room
+ Hall
+ Engine Room
+
+
+ Small storage room (score)
+ Kitchen
+
+
+Leftbar:
+HP
+
+
+
+Level up:
+Better prices
+Self-made weapons
+Combat (pilot)
+
+
+
+
+Combat (Ship):
+Ship hull = HP
+Hp based on plating/upgrades
+Self-repair
+
+Shield:
+NO
+
+30/70 A/E
+70/30 A/E
+
+Amount max weapons (2-6)
+Energy (2x vs shield)
+Ballistic (2x vs hull)
+
+Hull:
+
+
+
+On death:
+Lose money/resources
+Arrive at nearby station
+
+
+
+
+
+1.
+Planet:
+Uninhabited
+Basic materials
+
+
+
+Stations:
+Huge base space station
+Dead 
+Mining gear
+
+
+
+
+
+
+2.
+
+
+
+
+3. 
+
+
+
+
+4.
+-Base planet
+-Peacefull
+-+2 humans (means of space travel)
+-Doesn't go to other planets
+
+
+
+5. 
+-Hyper intel
+-Agressive but reasonable

@@ -8,4 +8,4 @@ def calc(t):
         total += sum
         print(total)
 
-calc(47)
+calc(54)

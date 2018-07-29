@@ -1,5 +1,8 @@
 import pygame as pg
 from PIL import ImageFont
+import random as r
+import ship_state as ship
+import math_functions as mf
 
 
 pg.font.init()
@@ -117,7 +120,7 @@ class custom_label_custom_pos_custom_text_pos(label):
         if textX != 'center':
             self.textX = textX
         else:
-            self.textX = rectX + ((rectW - current_textW) / 2.5)
+            self.textX = rectX + ((rectW - current_textW) / 2)
 
 
         if textY != 'center':
@@ -172,6 +175,22 @@ class menu_bar(label):
         else:
             self.current_nr -= sub_nr
 
+    def change_current_add(self, add_nr):
+        self.current_nr += add_nr
+
+
+    def change_max_set(self, set_nr):
+        self.max_nr = set_nr
+
+    def change_max_sub(self, sub_nr):
+        if self.max_nr - sub_nr < 0:
+            self.max_nr = 0
+        else:
+            self.max_nr -= sub_nr
+
+    def change_max_add(self, add_nr):
+        self.max_nr += add_nr
+
 
 
 class menu_bar_max(menu_bar):
@@ -193,7 +212,7 @@ class menu_bar_max(menu_bar):
 
         myfont = pg.font.SysFont(self.font, self.size, self.bold, self.italic)
 
-        self.text_with_nr = self.text + '   ' + str(self.current_nr) + ' / ' + str(self.max_nr)
+        self.text_with_nr = self.text + '  ' + str(self.current_nr) + ' / ' + str(self.max_nr)
 
         self.text_to_show = myfont.render(self.text_with_nr, False, self.textC)
 
@@ -219,8 +238,6 @@ class menu_bar_no_lim(menu_bar):
         self.over_max_text = over_max_text
 
 
-    def change_current_add(self, add_nr):
-        self.current_nr += add_nr
 
 
 
@@ -231,10 +248,10 @@ class menu_bar_no_lim(menu_bar):
 
 
         if self.current_nr >= self.max_nr:
-            self.text_with_nr = self.text + '   ' + str(self.current_nr) + ' / ' + str(self.max_nr) + '  ' + self.over_max_text
+            self.text_with_nr = self.text + '  ' + str(self.current_nr) + ' / ' + str(self.max_nr) + '  ' + self.over_max_text
 
         else:
-            self.text_with_nr = self.text + '   ' + str(self.current_nr) + ' / ' + str(self.max_nr)
+            self.text_with_nr = self.text + '  ' + str(self.current_nr) + ' / ' + str(self.max_nr)
 
         self.text_to_show = myfont.render(self.text_with_nr, False, self.textC)
 
@@ -268,12 +285,13 @@ class global_var():
 
 class combat_enemy():
 
-    def __init__(self, game_display, name, health_max, health_current, level):
+    def __init__(self, game_display, name, health_max, health_current, level, ship_hull):
         self.game_display = game_display
         self.name = name
         self.health_max = health_max
         self.health_current = health_current
         self.level = level
+        self.ship_hull = ship_hull
 
 
 
@@ -296,3 +314,63 @@ class combat_enemy():
             self.health_current = 0
         else:
             self.health_current -= sub_nr
+
+
+
+
+
+class weapon():
+
+    def __init__(self, damage, hit_chance, recharge_delay):
+        self.damage = damage
+        self.hit_chance = hit_chance
+        self.recharge_delay = recharge_delay
+
+
+    def fire(self, enemy):
+
+        reduction = 1 - (mf.hull_reduction(enemy.ship_hull) / 100)
+        if r.randint(0, 100) < self.hit_chance:
+           enemy.change_current_sub(int(self.damage * reduction))
+        else:
+           pass
+
+
+class energy_weapon(weapon):
+
+    def __init__(self, damage, hit_chance, recharge_delay):
+        super().__init__(damage, hit_chance, recharge_delay)
+
+
+
+
+
+
+
+
+
+
+
+class planet_one_stations():
+
+    amount_stations = 0
+    list_of_stations = []
+
+    def __init__(self, nr):
+        self.nr = nr
+        self.station_nr = planet_one_stations.amount_stations
+        planet_one_stations.amount_stations += 1
+        planet_one_stations.list_of_stations.append(self)
+
+    @classmethod
+    def return_amount_stations(cls):
+        return cls.amount_stations
+
+    @classmethod
+    def return_list_of_stations_index(cls, index):
+        return cls.list_of_stations[index]
+
+
+
+
+
