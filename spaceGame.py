@@ -77,7 +77,8 @@ def changeBar(bar_to_show):
 
 def showCombatBar():
     menu_combat_bar_run.draw()
-    menu_combat_bar_attack.draw()
+    menu_combat_bar_weapon1.draw()
+    menu_combat_bar_weapon2.draw()
 
 
 
@@ -150,7 +151,9 @@ def showChangeNameMenu():
                         changeShipName(too_long_name_text)
                         input_name_label.draw()
                         name_label_custom.draw()
-                        update()
+                        pg.event.set_blocked(pg.MOUSEMOTION)
+                        t.sleep(0.5)
+                        pg.event.set_allowed(pg.MOUSEMOTION)
                         t.sleep(0.5)
             changeShipName(new_ship_name)
         input_name_label.draw()
@@ -336,18 +339,40 @@ def nextBar(prev_bar_x, prev_bar_W):
 
 def initCombat():
 
-    enemy_names = ['ISS Succubus', 'Tentacruiser', 'Cummunicator']
-    enemy_name = r.choice(enemy_names)
-    enemy_health_max = r.randrange(100, 140, 2) + 10 * char.level
+    available_enemy_names = ['ISS Succubus', 'Tentacruiser', 'Cummunicator']
+    enemy_name = r.choice(available_enemy_names)
 
     if char.level == 1:
         enemy_level = r.randrange(1, char.level + 2)
     else:
         enemy_level = r.randrange(char.level - 1, char.level + 2)
 
-    enemy_hull = 'standard metal'
+    enemy_health_max = r.randrange(100, 140, 2) + 10 * enemy_level
 
-    test_enemy = cls.combat_enemy(game_display, enemy_name, enemy_health_max, enemy_health_max, enemy_level, enemy_hull)
+    if char.level <= 5:
+        available_enemy_hulls = ['standard metal']
+        available_enemy_weapons = [wp.energy_weapon_10, wp.energy_weapon_30]
+
+    elif char.level <= 10:
+        available_enemy_hulls = ['standard metal', 'hardened metal']
+        available_enemy_weapons = [wp.energy_weapon_30, wp.energy_weapon_50]
+
+    elif char.level <= 15:
+        available_enemy_hulls = ['standard metal', 'hardened metal']
+        available_enemy_weapons = [wp.energy_weapon_30, wp.energy_weapon_50]
+
+    elif char.level <= 20:
+        available_enemy_hulls = ['standard metal', 'hardened metal']
+        available_enemy_weapons = [wp.energy_weapon_30, wp.energy_weapon_50]
+
+    else:
+        available_enemy_hulls = ['cheater hull']
+        available_enemy_weapons = [wp.cheater_weapon]
+
+    enemy_hull = r.choice(available_enemy_hulls)
+    enemy_weapon = r.choice(available_enemy_weapons)
+
+    test_enemy = cls.combat_enemy(game_display, enemy_name + enemy_hull, enemy_health_max, enemy_health_max, enemy_level, enemy_hull, enemy_weapon)
 
     test_rectW = 200
     test_rectH = 500
@@ -381,31 +406,15 @@ def initCombat():
                     if menu_options_btn.rect.collidepoint(mpos):
                         changeMenu('keep_options')
 
-                    elif menu_combat_bar_attack.rect.collidepoint(mpos):
-                        ship.health_current -= int(r.randint(10, 20) * (1 - (mf.hull_reduction(ship.hull) / 100)))
+                    elif menu_combat_bar_weapon1.rect.collidepoint(mpos):
+                        ship.health_current - current_enemy.fire(ship.hull)
                         menu_hp_bar.change_current_set(ship.health_current)
-                        wp.energy_weapon_test1.fire(current_enemy)
+                        ship.equipped_weapons[0].fire(current_enemy)
 
-                        if current_enemy.health_current == 0:
-                            showCombatBar()
-                            test_combat_rect.draw()
-                            test_combat_health_bar.draw()
-                            update()
-                            showSidebarMenu()
-                            #t.sleep(0.1)
-                            menu_xp_bar.change_current_add(25)
-                            combat_done = True
-
-                        elif current_enemy.health_current == 0:
-                            showCombatBar()
-                            test_combat_rect.draw()
-                            test_combat_health_bar.draw()
-                            update()
-                            showSidebarMenu()
-                            t.sleep(0.5)
-                            combat_done = True
-
-
+                    elif menu_combat_bar_weapon2.rect.collidepoint(mpos):
+                        ship.health_current - current_enemy.fire(ship.hull)
+                        menu_hp_bar.change_current_set(ship.health_current)
+                        ship.equipped_weapons[1].fire(current_enemy)
 
 
                     elif menu_combat_bar_run.rect.collidepoint(mpos):
@@ -413,6 +422,25 @@ def initCombat():
 
                     elif menu_combat_btn.rect.collidepoint(mpos):
                         combat_done = True
+
+                if current_enemy.health_current == 0:
+                    showCombatBar()
+                    test_combat_rect.draw()
+                    test_combat_health_bar.draw()
+                    update()
+                    showSidebarMenu()
+                    char.xp_current += 25
+                    menu_xp_bar.change_current_set(char.xp_current)
+                    combat_done = True
+
+                elif current_enemy.health_current == 0:
+                    showCombatBar()
+                    test_combat_rect.draw()
+                    test_combat_health_bar.draw()
+                    update()
+                    showSidebarMenu()
+                    t.sleep(0.5)
+                    combat_done = True
 
 
 
@@ -521,23 +549,27 @@ prev_bar_y = menuShipY
 
 menu_hp_bar = cls.menu_bar_max(game_display, menuShipX, menuShipY + 130, 240, 50, options_black, red, ship.health_max, ship.health_current, 'Health', white, 'Arial', 20, False, True)
 
-menu_xp_bar = cls.menu_bar_no_lim(game_display, (menuShipX+ 0), menu_hp_bar.rectY + 130, 240, 50, options_black, green, 200, 100, 'Level Up!', 'XP', white, 'Arial', 20, False, True)
+menu_xp_bar = cls.menu_bar_no_lim(game_display, (menuShipX+ 0), menu_hp_bar.rectY + 130, 240, 50, options_black, green, char.xp_max, char.xp_current, 'Level Up!', 'XP', white, 'Arial', 20, False, True)
 
 
 
-menu_combat_bar_attackW = 400
-menu_combat_bar_attackH = menuHeight / 2
+menu_combat_bar_attackW = 200
+menu_combat_bar_attackH = menuHeight / 4
 menu_combat_bar_attackX = display_width / 30 * 8
-menu_combat_bar_attackY = menuBotY + ((menuHeight - menu_combat_bar_attackH) / 2)
+menu_combat_bar_attackY = menuBotY + 10
 
 
-menu_combat_bar_runW = 400
-menu_combat_bar_runH = menuHeight / 2
+menu_combat_bar_runW = 200
+menu_combat_bar_runH = menuHeight / 4
 menu_combat_bar_runX = display_width / 30 * 20
-menu_combat_bar_runY = menuBotY + ((menuHeight - menu_combat_bar_runH) / 2)
+menu_combat_bar_runY = menuBotY + 10
+
+#for i in range(0, len(ship.equipped_weapons)):
+menu_combat_bar_weapon1 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_attackX, menu_combat_bar_attackY, menu_combat_bar_attackW, menu_combat_bar_attackH, white, ship.equipped_weapons[0].name, menu_black, 'Arial', 20, True, False)
+menu_combat_bar_weapon2 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_attackX, menu_combat_bar_attackY + menuHeight / 3, menu_combat_bar_attackW, menu_combat_bar_attackH, white, ship.equipped_weapons[1].name, menu_black, 'Arial', 20, True, False)
 
 
-menu_combat_bar_attack = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_attackX, menu_combat_bar_attackY, menu_combat_bar_attackW, menu_combat_bar_attackH, white, 'Attack', menu_black, 'Arial', 50, True, False)
+
 menu_combat_bar_run = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_runX, menu_combat_bar_runY, menu_combat_bar_runW, menu_combat_bar_runH, white, 'Run', menu_black, 'Arial', 50, True, False)
 
 
@@ -585,6 +617,22 @@ def mainLoop():
                     elif menu_travel_btn.rect.collidepoint(mpos):
                         changeMenu('travel_menu')
 
+                    elif menu_xp_bar.rect.collidepoint(mpos):
+                        if char.xp_current >= char.xp_max:
+                            char.level += 1
+                            char.xp_current -= char.xp_max
+                            char.xp_max += 100
+                            menu_xp_bar.change_max_set(char.xp_max)
+                        else:
+                            normal_text = menu_xp_bar.text
+                            menu_xp_bar.change_text('Not enough xp!')
+                            showMenuBasics()
+                            update()
+                            pg.event.set_blocked(pg.MOUSEMOTION)
+                            t.sleep(0.5)
+                            pg.event.set_allowed(pg.MOUSEMOTION)
+                            menu_xp_bar.change_text(normal_text)
+
                     elif menu_hp_bar.background_bar.collidepoint(mpos):
                         menu_hp_bar.change_current_add(15)
                     elif menu_xp_bar.background_bar.collidepoint(mpos):
@@ -600,9 +648,10 @@ def mainLoop():
 
                 elif ev.button == 3:
                     if menu_hp_bar.background_bar.collidepoint(mpos):
-                        menu_hp_bar.change_current_sub(20)
+                        menu_hp_bar.change_current_add(25)
                     elif menu_xp_bar.background_bar.collidepoint(mpos):
-                        menu_xp_bar.change_current_sub(20)
+                        char.xp_current += 25
+                        menu_xp_bar.change_current_set(char.xp_current)
 
                 elif ev.button == 4:
                     if menu_hp_bar.background_bar.collidepoint(mpos):

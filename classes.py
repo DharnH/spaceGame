@@ -1,8 +1,12 @@
 import pygame as pg
 from PIL import ImageFont
 import random as r
-import ship_state as ship
+#import ship_state as ship
 import math_functions as mf
+
+
+# ATTRIBUTE ERROR: IMPORT LOOP
+
 
 
 pg.font.init()
@@ -285,18 +289,28 @@ class global_var():
 
 class combat_enemy():
 
-    def __init__(self, game_display, name, health_max, health_current, level, ship_hull):
+    def __init__(self, game_display, name, health_max, health_current, level, ship_hull, weapon):
         self.game_display = game_display
         self.name = name
         self.health_max = health_max
         self.health_current = health_current
         self.level = level
         self.ship_hull = ship_hull
+        self.weapon = weapon
 
 
 
     def draw(self):
         myfont = pg.font.SysFont('Arial', 20, False, True)
+
+
+    def fire(self, hull):
+
+        reduction = 1 - (mf.hull_reduction(hull) / 100)
+        if r.randint(0, 100) < self.weapon.hit_chance:
+           return int(self.weapon.damage * reduction)
+        else:
+           return 0
 
 
 
@@ -321,7 +335,8 @@ class combat_enemy():
 
 class weapon():
 
-    def __init__(self, damage, hit_chance, recharge_delay):
+    def __init__(self, name, damage, hit_chance, recharge_delay):
+        self.name = name
         self.damage = damage
         self.hit_chance = hit_chance
         self.recharge_delay = recharge_delay
@@ -336,14 +351,11 @@ class weapon():
            pass
 
 
+
 class energy_weapon(weapon):
 
-    def __init__(self, damage, hit_chance, recharge_delay):
-        super().__init__(damage, hit_chance, recharge_delay)
-
-
-
-
+    def __init__(self, name, damage, hit_chance, recharge_delay):
+        super().__init__(name, damage, hit_chance, recharge_delay)
 
 
 
