@@ -51,6 +51,9 @@ class buttons_and_labels():
     def change_text(self, new_text):
         self.text = new_text
 
+    def change_rectC(self, new_color):
+        self.rectC = new_color
+
 
 
 
@@ -71,6 +74,45 @@ class label(buttons_and_labels):
 
     def __init__ (self, game_display, rectX, rectY, rectW, rectH, rectC, text, textC, font, size, bold, italic):
         super().__init__(game_display, rectX, rectY, rectW, rectH, rectC, text, textC, font, size, bold, italic)
+
+
+class just_text():
+
+    def __init__(self, game_display, rectX, rectY, rectW, rectH, text, textX, textY, textC, font, size, bold, italic):
+        self.game_display = game_display
+        self.text = text
+        self.textC = textC
+        self.font = font
+        self.size = size
+        self.bold = bold
+        self.italic = italic
+
+
+        text_font = ImageFont.truetype(font.lower() + '.ttf', size)
+        current_textW, current_textH = text_font.getsize(text)
+
+        if textX != 'center':
+            self.textX = textX
+        else:
+            self.textX = rectX + ((rectW - current_textW) / 2)
+
+
+        if textY != 'center':
+            self.textY = textY
+        else:
+            self.textY = rectY + ((rectH - current_textH) / 3.0)
+
+
+
+
+    def draw(self):
+
+        myfont = pg.font.SysFont(self.font, self.size, self.bold, self.italic)
+
+        text_to_show = myfont.render(self.text, False, self.textC)
+
+        self.game_display.blit(text_to_show, (self.textX, self.textY))
+
 
 
 

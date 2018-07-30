@@ -76,9 +76,39 @@ def changeBar(bar_to_show):
 
 
 def showCombatBar():
-    menu_combat_bar_run.draw()
+
+    j = 0
+    for i in range(0, len(ship.equipped_weapons)):
+        j += 1
+    for k in range(j, 6):
+        if k == 0:
+            menu_combat_bar_weapon1.change_text('')
+            menu_combat_bar_weapon1.change_rectC(gray)
+        if k == 1:
+            menu_combat_bar_weapon2.change_text('')
+            menu_combat_bar_weapon2.change_rectC(gray)
+        if k == 2:
+            menu_combat_bar_weapon3.change_text('')
+            menu_combat_bar_weapon3.change_rectC(gray)
+        if k == 3:
+            menu_combat_bar_weapon4.change_text('')
+            menu_combat_bar_weapon4.change_rectC(gray)
+        if k == 4:
+            menu_combat_bar_weapon5.change_text('')
+            menu_combat_bar_weapon5.change_rectC(gray)
+        if k == 5:
+            menu_combat_bar_weapon6.change_text('')
+            menu_combat_bar_weapon6.change_rectC(gray)
+
+
+
     menu_combat_bar_weapon1.draw()
     menu_combat_bar_weapon2.draw()
+    menu_combat_bar_weapon3.draw()
+    menu_combat_bar_weapon4.draw()
+    menu_combat_bar_weapon5.draw()
+    menu_combat_bar_weapon6.draw()
+
 
 
 
@@ -372,7 +402,7 @@ def initCombat():
     enemy_hull = r.choice(available_enemy_hulls)
     enemy_weapon = r.choice(available_enemy_weapons)
 
-    test_enemy = cls.combat_enemy(game_display, enemy_name + enemy_hull, enemy_health_max, enemy_health_max, enemy_level, enemy_hull, enemy_weapon)
+    test_enemy = cls.combat_enemy(game_display, enemy_name, enemy_health_max, enemy_health_max, enemy_level, enemy_hull, enemy_weapon)
 
     test_rectW = 200
     test_rectH = 500
@@ -385,16 +415,20 @@ def initCombat():
     test_barW = 170
     test_barH = 50
     test_barX = return_center(test_rectX, test_rectW, test_barW)
-    test_barY = test_rectY + 100
+    test_barY = test_rectY + 160
 
     test_combat_health_bar = cls.menu_bar_max(game_display, test_barX, test_barY, test_barW, test_barH, options_black, red, test_enemy.health_max, test_enemy.health_current, 'Health', white, 'Arial', 20, False, True)
+
+    current_enemy = test_enemy
+
+
+    combat_level_text = cls.just_text(game_display, test_rectX, test_rectY, test_rectW, test_rectH, 'Lvl. ' + str(current_enemy.level), 'center', test_rectY + 60, white, 'Arial', 20, False, True)
+    combat_hull_text = cls.just_text(game_display, test_rectX, test_rectY, test_rectW, test_rectH, current_enemy.ship_hull, 'center', test_rectY + 100, white, 'Arial', 20, False, True)
 
 
     combat_done = False
 
-    current_enemy = test_enemy
-
-    while not combat_done:
+    while not combat_done and not gv.end_game:
         for ev in pg.event.get():
             if ev.type == pg.QUIT:
                 gv.end_game = True
@@ -406,16 +440,8 @@ def initCombat():
                     if menu_options_btn.rect.collidepoint(mpos):
                         changeMenu('keep_options')
 
-                    elif menu_combat_bar_weapon1.rect.collidepoint(mpos):
-                        ship.health_current - current_enemy.fire(ship.hull)
-                        menu_hp_bar.change_current_set(ship.health_current)
-                        ship.equipped_weapons[0].fire(current_enemy)
-
-                    elif menu_combat_bar_weapon2.rect.collidepoint(mpos):
-                        ship.health_current - current_enemy.fire(ship.hull)
-                        menu_hp_bar.change_current_set(ship.health_current)
-                        ship.equipped_weapons[1].fire(current_enemy)
-
+                    elif menu_combat_bar_attack.rect.collidepoint(mpos):
+                        combat_attack(current_enemy, test_combat_rect, combat_level_text, combat_hull_text, test_combat_health_bar)
 
                     elif menu_combat_bar_run.rect.collidepoint(mpos):
                         combat_done = True
@@ -443,15 +469,56 @@ def initCombat():
                     combat_done = True
 
 
+        showMenuTemplate()
+        showMenuBasics()
+        menu_combat_bar_attack.draw()
+        menu_combat_bar_run.draw()
+        test_combat_rect.draw()
+        test_combat_health_bar.change_current_set(current_enemy.health_current)
+        test_combat_health_bar.draw()
+        combat_level_text.draw()
+        combat_hull_text.draw()
+        update()
 
 
+
+def combat_attack(current_enemy, test_combat_rect, combat_level_text, combat_hull_text, test_combat_health_bar):
+    has_attacked = False
+    while not has_attacked:
+        for ev in pg.event.get():
+            if ev.type == pg.QUIT:
+                gv.end_game = True
+                has_attacked = True
+
+            elif ev.type == pg.MOUSEBUTTONUP:
+                mpos = pg.mouse.get_pos()
+                if ev.button == 1:
+                    if menu_options_btn.rect.collidepoint(mpos):
+                        changeMenu('keep_options')
+
+                    elif menu_combat_bar_weapon1.rect.collidepoint(mpos):
+                        print('yes')
+                        ship.health_current - current_enemy.fire(ship.hull)
+                        menu_hp_bar.change_current_set(ship.health_current)
+                        ship.equipped_weapons[0].fire(current_enemy)
+                        has_attacked = True
+
+                    elif menu_combat_bar_weapon2.rect.collidepoint(mpos):
+                        ship.health_current - current_enemy.fire(ship.hull)
+                        menu_hp_bar.change_current_set(ship.health_current)
+                        ship.equipped_weapons[1].fire(current_enemy)
+                        has_attacked = True
+
+
+        showMenuTemplate()
+        showMenuBasics()
         showCombatBar()
         test_combat_rect.draw()
         test_combat_health_bar.change_current_set(current_enemy.health_current)
         test_combat_health_bar.draw()
+        combat_level_text.draw()
+        combat_hull_text.draw()
         update()
-
-
 
 
 
@@ -553,31 +620,48 @@ menu_xp_bar = cls.menu_bar_no_lim(game_display, (menuShipX+ 0), menu_hp_bar.rect
 
 
 
-menu_combat_bar_attackW = 200
-menu_combat_bar_attackH = menuHeight / 4
-menu_combat_bar_attackX = display_width / 30 * 8
-menu_combat_bar_attackY = menuBotY + 10
+menu_combat_bar_weaponW = 300
+menu_combat_bar_weaponH = menuHeight / 3
+menu_combat_bar_weaponX = display_width / 30 * 8
+menu_combat_bar_weaponY = menuBotY + 20
 
-
+'''
 menu_combat_bar_runW = 200
 menu_combat_bar_runH = menuHeight / 4
 menu_combat_bar_runX = display_width / 30 * 20
-menu_combat_bar_runY = menuBotY + 10
-
-#for i in range(0, len(ship.equipped_weapons)):
-menu_combat_bar_weapon1 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_attackX, menu_combat_bar_attackY, menu_combat_bar_attackW, menu_combat_bar_attackH, white, ship.equipped_weapons[0].name, menu_black, 'Arial', 20, True, False)
-menu_combat_bar_weapon2 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_attackX, menu_combat_bar_attackY + menuHeight / 3, menu_combat_bar_attackW, menu_combat_bar_attackH, white, ship.equipped_weapons[1].name, menu_black, 'Arial', 20, True, False)
+menu_combat_bar_runY = menuBotY + 20
+'''
 
 
+
+menu_combat_bar_weapon1 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_weaponX, menu_combat_bar_weaponY, menu_combat_bar_weaponW, menu_combat_bar_weaponH, white, ship.equipped_weapons[0].name, menu_black, 'Arial', 20, True, False)
+menu_combat_bar_weapon2 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_weaponX, menu_combat_bar_weaponY + menuHeight / 2.2, menu_combat_bar_weaponW, menu_combat_bar_weaponH, white, ship.equipped_weapons[1].name, menu_black, 'Arial', 20, True, False)
+menu_combat_bar_weapon3 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_weaponX + 320, menu_combat_bar_weaponY, menu_combat_bar_weaponW, menu_combat_bar_weaponH, white, ship.equipped_weapons[0].name, menu_black, 'Arial', 20, True, False)
+menu_combat_bar_weapon4 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_weaponX + 320, menu_combat_bar_weaponY + menuHeight / 2.2, menu_combat_bar_weaponW, menu_combat_bar_weaponH, white, ship.equipped_weapons[1].name, menu_black, 'Arial', 20, True, False)
+menu_combat_bar_weapon5 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_weaponX + 640, menu_combat_bar_weaponY, menu_combat_bar_weaponW, menu_combat_bar_weaponH, white, ship.equipped_weapons[0].name, menu_black, 'Arial', 20, True, False)
+menu_combat_bar_weapon6 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_weaponX + 640, menu_combat_bar_weaponY + menuHeight / 2.2, menu_combat_bar_weaponW, menu_combat_bar_weaponH, white, ship.equipped_weapons[1].name, menu_black, 'Arial', 20, True, False)
+
+
+
+
+
+menu_combat_bar_attackW = 400
+menu_combat_bar_attackH = menuHeight / 2
+menu_combat_bar_attackX = display_width / 30 * 8
+menu_combat_bar_attackY = menuBotY + ((menuHeight - menu_combat_bar_attackH) / 2)
+
+
+menu_combat_bar_runW = 400
+menu_combat_bar_runH = menuHeight / 2
+menu_combat_bar_runX = display_width / 30 * 20
+menu_combat_bar_runY = menuBotY + ((menuHeight - menu_combat_bar_runH) / 2)
+
+
+
+
+menu_combat_bar_attack = cls.custom_label_fix_pos_center(game_display, menu_combat_bar_attackX, menu_combat_bar_attackY, menu_combat_bar_attackW, menu_combat_bar_attackH, white, 'Attack', menu_black, 'Arial', 50, True, False)
 
 menu_combat_bar_run = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_runX, menu_combat_bar_runY, menu_combat_bar_runW, menu_combat_bar_runH, white, 'Run', menu_black, 'Arial', 50, True, False)
-
-
-
-
-
-
-
 
 
 
