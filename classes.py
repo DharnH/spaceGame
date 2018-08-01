@@ -376,8 +376,11 @@ class combat_enemy():
     def fire(self, hull):
 
         reduction = 1 - (mf.hull_reduction(hull) / 100)
-        if r.randint(0, 100) < self.weapon.hit_chance:
-           return int(self.weapon.damage * reduction)
+        if r.randint(0, 100) <= self.weapon.hit_chance:
+            if self.weapon.type == 'radiation':
+                return self.weapon.damage
+            elif self.weapon.type == 'energy':
+                return int(self.weapon.damage * reduction)
         else:
            return 0
 
@@ -416,8 +419,11 @@ class weapon():
     def fire(self, enemy):
 
         reduction = 1 - (mf.hull_reduction(enemy.ship_hull) / 100)
-        if r.randint(0, 100) < self.hit_chance:
-           return int(self.damage * reduction)
+        if r.randint(0, 100) <= self.hit_chance:
+            if self.type == 'radiation':
+                return self.damage
+            elif self.type == 'energy':
+                return int(self.damage * reduction)
         else:
            return 0
 

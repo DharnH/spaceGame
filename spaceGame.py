@@ -355,6 +355,11 @@ def nextBar(prev_bar_x, prev_bar_W):
 
 def initCombat():
 
+    combat_your_action.change_text('')
+    combat_enemy_action.change_text('')
+
+    weapon_bars = [menu_combat_bar_weapon1, menu_combat_bar_weapon2, menu_combat_bar_weapon3, menu_combat_bar_weapon4, menu_combat_bar_weapon5, menu_combat_bar_weapon6]
+
     available_enemy_names = ['ISS Succubus', 'Tentacruiser', 'Cummunicator']
     enemy_name = r.choice(available_enemy_names)
 
@@ -427,10 +432,17 @@ def initCombat():
                         changeMenu('keep_options')
 
                     elif menu_combat_bar_attack.rect.collidepoint(mpos):
-                        combat_attack(current_enemy, test_combat_rect, combat_level_text, combat_hull_text, test_combat_health_bar)
+                        combat_attack(current_enemy, test_combat_rect, combat_level_text, combat_hull_text, test_combat_health_bar, weapon_bars)
 
                     elif menu_combat_bar_run.rect.collidepoint(mpos):
-                        combat_done = True
+                        if r.randint(0, 100) <= char.stat_run:
+                            combat_run_win(current_enemy, test_combat_rect, combat_level_text, combat_hull_text, test_combat_health_bar)
+                            combat_done = True
+                        else:
+                            combat_run_lose(current_enemy, test_combat_rect, combat_level_text, combat_hull_text, test_combat_health_bar)
+
+                    elif menu_combat_bar_wait.rect.collidepoint(mpos):
+                        combat_wait(current_enemy, test_combat_rect, combat_level_text, combat_hull_text, test_combat_health_bar, weapon_bars)
 
                     elif menu_combat_btn.rect.collidepoint(mpos):
                         combat_done = True
@@ -443,6 +455,7 @@ def initCombat():
                     showSidebarMenu()
                     char.xp_current += 25
                     menu_xp_bar.change_current_set(char.xp_current)
+                    combat_win(current_enemy, test_combat_rect, combat_level_text, combat_hull_text, test_combat_health_bar)
                     combat_done = True
 
                 elif current_enemy.health_current <= 0:
@@ -452,12 +465,16 @@ def initCombat():
                     update()
                     showSidebarMenu()
                     t.sleep(0.5)
+                    combat_lose(current_enemy, test_combat_rect, combat_level_text, combat_hull_text, test_combat_health_bar)
                     combat_done = True
 
 
         showMenuTemplate()
         showMenuBasics()
+        combat_your_action.draw()
+        combat_enemy_action.draw()
         menu_combat_bar_attack.draw()
+        menu_combat_bar_wait.draw()
         menu_combat_bar_run.draw()
         test_combat_rect.draw()
         test_combat_health_bar.change_current_set(current_enemy.health_current)
@@ -467,10 +484,15 @@ def initCombat():
         update()
 
 
+    for l in range(0, len(ship.equipped_weapons)):
+        weapon_to_reduce = ship.equipped_weapons[l]
+        if weapon_to_reduce.recharge_current != 0:
+            weapon_to_reduce.recharge_current = 0
+            weapon_bars[l].change_rectC(white)
 
-def combat_attack(current_enemy, test_combat_rect, combat_level_text, combat_hull_text, test_combat_health_bar):
 
-    weapon_bars = [menu_combat_bar_weapon1, menu_combat_bar_weapon2, menu_combat_bar_weapon3, menu_combat_bar_weapon4, menu_combat_bar_weapon5, menu_combat_bar_weapon6]
+
+def combat_attack(current_enemy, test_combat_rect, combat_level_text, combat_hull_text, test_combat_health_bar, weapon_bars):
     has_attacked = False
     draw_tooltip = []
 
@@ -481,10 +503,6 @@ def combat_attack(current_enemy, test_combat_rect, combat_level_text, combat_hul
     weapon_tooltip_recharge_time = cls.just_text(game_display, 0, 0, 0, 0, 'Recharge time : ' + str(ship.equipped_weapons[0].recharge_delay), 0 + 10, 0 + 85, white, 'Arial', 20, True, False)
 
     weapon_tooltip_recharge_left = cls.just_text(game_display, 0, 0, 0, 0, 'Recharge left : ' + str(ship.equipped_weapons[0].recharge_current), 0 + 10, 0 + 110, white, 'Arial', 20, True, False)
-
-    you_hit = cls.just_text(game_display, 0, 0, 0, 0, '', 300, 300, options_black, 'Arial', 200, True, False)
-
-    enemy_hit = cls.just_text(game_display, 0, 0, 0, 0, '', 300, 500, options_black, 'Arial', 200, True, False)
 
 
 
@@ -513,18 +531,18 @@ def combat_attack(current_enemy, test_combat_rect, combat_level_text, combat_hul
                             enemy_damage = current_enemy.fire(ship.hull)
                             if enemy_damage > 0:
                                 ship.health_current -= enemy_damage
-                                enemy_hit.change_text('You got hit for ' + str(enemy_damage) + '!')
+                                combat_enemy_action.change_text('He hit you for ' + str(enemy_damage) + '!')
+                                menu_hp_bar.change_current_set(ship.health_current)
                             else:
-                                enemy_hit.change_text('He missed!')
+                                combat_enemy_action.change_text('He missed!')
 
-                            menu_hp_bar.change_current_set(ship.health_current)
                             if weapon.recharge_current == 0:
                                 your_damage = weapon.fire(current_enemy)
                                 if your_damage > 0:
                                     current_enemy.health_current -= your_damage
-                                    enemy_hit.change_text('You hit him for ' + str(enemy_damage) + '!')
+                                    combat_your_action.change_text('You hit him for ' + str(your_damage) + '!')
                                 else:
-                                    enemy_hit.change_text('You missed!')
+                                    combat_your_action.change_text('You missed!')
 
                                 for l in range(0, len(ship.equipped_weapons)):
                                     weapon_to_reduce = ship.equipped_weapons[l]
@@ -556,7 +574,7 @@ def combat_attack(current_enemy, test_combat_rect, combat_level_text, combat_hul
 
                     if weapon_bars[k].rect.collidepoint(mpos):
                         weapon_tooltip_damage_and_rect = cls.custom_label_custom_pos_custom_text_pos(game_display, weapon_tooltipX, weapon_tooltipY, weapon_tooltipW, weapon_tooltipH, options_black, 'Damage: ' + str(ship.equipped_weapons[k].damage), white, weapon_tooltipX + 10, weapon_tooltipY + 10, 'Arial', 20, True, False)
-                        weapon_tooltip_hit_chance = cls.just_text(game_display, weapon_tooltipX, weapon_tooltipY, weapon_tooltipW, weapon_tooltipH, 'Hit Change: ' + str(ship.equipped_weapons[k].hit_chance), weapon_tooltipX + 10, weapon_tooltipY + 35, white, 'Arial', 20, True, False)
+                        weapon_tooltip_hit_chance = cls.just_text(game_display, weapon_tooltipX, weapon_tooltipY, weapon_tooltipW, weapon_tooltipH, 'Hit Chance: ' + str(ship.equipped_weapons[k].hit_chance), weapon_tooltipX + 10, weapon_tooltipY + 35, white, 'Arial', 20, True, False)
                         weapon_tooltip_type = cls.just_text(game_display, weapon_tooltipX, weapon_tooltipY, weapon_tooltipW, weapon_tooltipH, 'Type : ' + str(ship.equipped_weapons[k].type), weapon_tooltipX + 10, weapon_tooltipY + 60, white, 'Arial', 20, True, False)
                         weapon_tooltip_recharge_time = cls.just_text(game_display, weapon_tooltipX, weapon_tooltipY, weapon_tooltipW, weapon_tooltipH, 'Recharge time : ' + str(ship.equipped_weapons[k].recharge_delay), weapon_tooltipX + 10, weapon_tooltipY + 85, white, 'Arial', 20, True, False)
                         if ship.equipped_weapons[k].recharge_current > 0:
@@ -565,35 +583,12 @@ def combat_attack(current_enemy, test_combat_rect, combat_level_text, combat_hul
                             weapon_tooltip_recharge_left.change_text('')
                         draw_tooltip.append(True)
 
-                        '''
-                        weapon_tooltip_damage_and_rect = cls.custom_label_custom_pos_custom_text_pos(game_display, 10, 10, 100, 200, options_black, 'Damage: 50', white, 0 + 10, 0 + 10, 'Arial', 20, True, False)
-                    
-                        print(weapon_tooltip_damage_and_rect.rectW)
-                    
-                        weapon_tooltip_damage_and_rect.change_text('Damage: ' + str(ship.equipped_weapons[0].damage))
-                    
-                        weapon_tooltip_damage_and_rect.change_rectW(500)
-                    
-                        weapon_tooltip_damage_and_rect.change_rectH(500)
-                    
-                        weapon_tooltip_damage_and_rect.change_rectX(100)
-                    
-                        weapon_tooltip_damage_and_rect.change_rectY(100)
-                    
-                        weapon_tooltip_damage_and_rect.change_textX(100 + 10)
-                    
-                        weapon_tooltip_damage_and_rect.change_textY(100 + 10)
-                    
-                        weapon_tooltip_damage_and_rect.change_rectC(yellow)
-                    
-                        print(weapon_tooltip_damage_and_rect.rectW)
-                        '''
-
 
         showMenuTemplate()
         showMenuBasics()
         showCombatBar()
-        you_hit.draw()
+        combat_your_action.draw()
+        combat_enemy_action.draw()
         if True in draw_tooltip:
             weapon_tooltip_damage_and_rect.draw()
             weapon_tooltip_hit_chance.draw()
@@ -608,43 +603,209 @@ def combat_attack(current_enemy, test_combat_rect, combat_level_text, combat_hul
         update()
 
 
+def combat_win(current_enemy, test_combat_rect, combat_level_text, combat_hull_text, test_combat_health_bar):
+    continued = False
 
-'''
+    while not continued:
+        for ev in pg.event.get():
+            mpos = pg.mouse.get_pos()
+            if ev.type == pg.QUIT:
+                gv.end_game = True
+                continued = True
 
-elif 
+            elif ev.type == pg.MOUSEBUTTONUP:
+                if ev.button == 1:
+                    if menu_options_btn.rect.collidepoint(mpos):
+                        changeMenu('keep_options')
+                        continued = True
 
-                    outside_button = False
-                    while not outside_button:
-                        for ev in pg.event.get():
+                    elif menu_combat_bar_continue.rect.collidepoint(mpos):
+                        continued = True
 
-                            if ev.type == pg.QUIT:
-                                gv.end_game = True
-                                has_attacked = True
-                            elif ev.type == pg.MOUSEMOTION:
-                                if weapon_bars[k].rect.collidepoint(mpos):
-                                    print('yesss')
-                                    outside_button = True
-                                else:
-                                    outside_button = True
-
-                        showMenuTemplate()
-                        showMenuBasics()
-                        showCombatBar()
-                        weapon_tooltip_damage_and_rect.draw()
-                        test_combat_rect.draw()
-                        test_combat_health_bar.change_current_set(current_enemy.health_current)
-                        test_combat_health_bar.draw()
-                        combat_level_text.draw()
-                        combat_hull_text.draw()
-                        update()
-                        
-        
-
-
+        showMenuTemplate()
+        showMenuBasics()
+        menu_combat_bar_continue.draw()
+        combat_your_action.draw()
+        combat_enemy_action.draw()
+        combat_you_win.draw()
+        test_combat_rect.draw()
+        test_combat_health_bar.change_current_set(current_enemy.health_current)
+        test_combat_health_bar.draw()
+        combat_level_text.draw()
+        combat_hull_text.draw()
+        update()
 
 
+def combat_lose(current_enemy, test_combat_rect, combat_level_text, combat_hull_text, test_combat_health_bar):
 
-'''
+    continued = False
+
+    while not continued:
+        for ev in pg.event.get():
+            mpos = pg.mouse.get_pos()
+            if ev.type == pg.QUIT:
+                gv.end_game = True
+                continued = True
+
+            elif ev.type == pg.MOUSEBUTTONUP:
+                if ev.button == 1:
+                    if menu_options_btn.rect.collidepoint(mpos):
+                        changeMenu('keep_options')
+                        continued = True
+
+                    elif menu_combat_bar_continue.rect.collidepoint(mpos):
+                        continued = True
+
+        showMenuTemplate()
+        showMenuBasics()
+        menu_combat_bar_continue.draw()
+        combat_your_action.draw()
+        combat_enemy_action.draw()
+        combat_you_lose.draw()
+        test_combat_rect.draw()
+        test_combat_health_bar.change_current_set(current_enemy.health_current)
+        test_combat_health_bar.draw()
+        combat_level_text.draw()
+        combat_hull_text.draw()
+        update()
+
+
+
+
+def combat_wait(current_enemy, test_combat_rect, combat_level_text, combat_hull_text, test_combat_health_bar, weapon_bars):
+
+    continued = False
+
+    combat_your_action.change_text('You wait.')
+    combat_enemy_action.change_text('')
+
+    enemy_damage = current_enemy.fire(ship.hull)
+    if enemy_damage > 0:
+        ship.health_current -= enemy_damage
+        combat_enemy_action.change_text('He hit you for ' + str(enemy_damage) + '!')
+        menu_hp_bar.change_current_set(ship.health_current)
+    else:
+        combat_enemy_action.change_text('He missed!')
+
+    for l in range(0, len(ship.equipped_weapons)):
+        weapon_to_reduce = ship.equipped_weapons[l]
+        if weapon_to_reduce.recharge_current != 0:
+            weapon_to_reduce.recharge_current -= 1
+            if weapon_to_reduce.recharge_current == 0:
+                weapon_bars[l].change_rectC(white)
+
+    while not continued:
+        for ev in pg.event.get():
+            mpos = pg.mouse.get_pos()
+            if ev.type == pg.QUIT:
+                gv.end_game = True
+                continued = True
+
+            elif ev.type == pg.MOUSEBUTTONUP:
+                if ev.button == 1:
+                    if menu_options_btn.rect.collidepoint(mpos):
+                        changeMenu('keep_options')
+                        continued = True
+
+                    elif menu_combat_bar_continue.rect.collidepoint(mpos):
+                        continued = True
+
+        showMenuTemplate()
+        showMenuBasics()
+        menu_combat_bar_continue.draw()
+        combat_your_action.draw()
+        combat_enemy_action.draw()
+        test_combat_rect.draw()
+        test_combat_health_bar.change_current_set(current_enemy.health_current)
+        test_combat_health_bar.draw()
+        combat_level_text.draw()
+        combat_hull_text.draw()
+        update()
+
+
+
+
+def combat_run_win(current_enemy, test_combat_rect, combat_level_text, combat_hull_text, test_combat_health_bar):
+
+    continued = False
+
+    combat_your_action.change_text('You got away!')
+    combat_enemy_action.change_text('')
+
+    while not continued:
+        for ev in pg.event.get():
+            mpos = pg.mouse.get_pos()
+            if ev.type == pg.QUIT:
+                gv.end_game = True
+                continued = True
+
+            elif ev.type == pg.MOUSEBUTTONUP:
+                if ev.button == 1:
+                    if menu_options_btn.rect.collidepoint(mpos):
+                        changeMenu('keep_options')
+                        continued = True
+
+                    elif menu_combat_bar_continue.rect.collidepoint(mpos):
+                        continued = True
+
+        showMenuTemplate()
+        showMenuBasics()
+        menu_combat_bar_continue.draw()
+        combat_your_action.draw()
+        test_combat_rect.draw()
+        test_combat_health_bar.change_current_set(current_enemy.health_current)
+        test_combat_health_bar.draw()
+        combat_level_text.draw()
+        combat_hull_text.draw()
+        update()
+
+
+
+def combat_run_lose(current_enemy, test_combat_rect, combat_level_text, combat_hull_text, test_combat_health_bar):
+
+    continued = False
+
+    combat_your_action.change_text('You failed to get away!')
+    combat_enemy_action.change_text('')
+
+    enemy_damage = current_enemy.fire(ship.hull)
+    if enemy_damage > 0:
+        ship.health_current -= enemy_damage
+        combat_enemy_action.change_text('He hit you for ' + str(enemy_damage) + '!')
+        menu_hp_bar.change_current_set(ship.health_current)
+    else:
+        combat_enemy_action.change_text('He missed!')
+
+    while not continued:
+        for ev in pg.event.get():
+            mpos = pg.mouse.get_pos()
+            if ev.type == pg.QUIT:
+                gv.end_game = True
+                continued = True
+
+            elif ev.type == pg.MOUSEBUTTONUP:
+                if ev.button == 1:
+                    if menu_options_btn.rect.collidepoint(mpos):
+                        changeMenu('keep_options')
+                        continued = True
+
+                    elif menu_combat_bar_continue.rect.collidepoint(mpos):
+                        continued = True
+
+        showMenuTemplate()
+        showMenuBasics()
+        menu_combat_bar_continue.draw()
+        combat_your_action.draw()
+        combat_enemy_action.draw()
+        test_combat_rect.draw()
+        test_combat_health_bar.change_current_set(current_enemy.health_current)
+        test_combat_health_bar.draw()
+        combat_level_text.draw()
+        combat_hull_text.draw()
+        update()
+
+
+
 
 
 
@@ -802,6 +963,17 @@ menu_combat_cancel_attack = cls.custom_label_custom_pos_center(game_display, men
 
 
 
+combat_your_action = cls.just_text(game_display, 0, 0, 0, 0, '', 300, 200, options_black, 'Arial', 90, True, False)
+
+combat_enemy_action = cls.just_text(game_display, 0, 0, 0, 0, '', 300, 320, options_black, 'Arial', 90, True, False)
+
+combat_you_win = cls.just_text(game_display, 0, 0, 0, 0, 'You Win!', 300, 440, options_black, 'Arial', 90, True, False)
+
+combat_you_lose = cls.just_text(game_display, 0, 0, 0, 0, 'You Lose!', 300, 440, options_black, 'Arial', 90, True, False)
+
+combat_you_run_win = cls.just_text(game_display, 0, 0, 0, 0, 'You got away!', 300, 200, options_black, 'Arial', 90, True, False)
+
+combat_you_run_lose = cls.just_text(game_display, 0, 0, 0, 0, 'You failed to get away!', 300, 200, options_black, 'Arial', 90, True, False)
 
 
 
@@ -812,23 +984,39 @@ menu_combat_cancel_attack = cls.custom_label_custom_pos_center(game_display, men
 
 
 
-menu_combat_bar_attackW = 400
-menu_combat_bar_attackH = menuHeight / 2
-menu_combat_bar_attackX = display_width / 30 * 8
+
+menu_combat_bar_attackW = 300
+menu_combat_bar_attackH = menuHeight / 2.5
+menu_combat_bar_attackX = display_width / 30 * 7
 menu_combat_bar_attackY = menuBotY + ((menuHeight - menu_combat_bar_attackH) / 2)
 
 
-menu_combat_bar_runW = 400
-menu_combat_bar_runH = menuHeight / 2
-menu_combat_bar_runX = display_width / 30 * 20
+menu_combat_bar_waitW = 300
+menu_combat_bar_waitH = menuHeight / 2.5
+menu_combat_bar_waitX = display_width / 30 * 14.5
+menu_combat_bar_waitY = menuBotY + ((menuHeight - menu_combat_bar_attackH) / 2)
+
+
+menu_combat_bar_runW = 300
+menu_combat_bar_runH = menuHeight / 2.5
+menu_combat_bar_runX = display_width / 30 * 22
 menu_combat_bar_runY = menuBotY + ((menuHeight - menu_combat_bar_runH) / 2)
 
 
 
 
-menu_combat_bar_attack = cls.custom_label_fix_pos_center(game_display, menu_combat_bar_attackX, menu_combat_bar_attackY, menu_combat_bar_attackW, menu_combat_bar_attackH, white, 'Attack', menu_black, 'Arial', 50, True, False)
+menu_combat_bar_attack = cls.custom_label_fix_pos_center(game_display, menu_combat_bar_attackX, menu_combat_bar_attackY, menu_combat_bar_attackW, menu_combat_bar_attackH, white, 'Attack', menu_black, 'Arial', 40, True, False)
 
-menu_combat_bar_run = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_runX, menu_combat_bar_runY, menu_combat_bar_runW, menu_combat_bar_runH, white, 'Run', menu_black, 'Arial', 50, True, False)
+menu_combat_bar_wait = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_waitX, menu_combat_bar_waitY, menu_combat_bar_waitW, menu_combat_bar_waitH, white, 'Wait', menu_black, 'Arial', 40, True, False)
+
+menu_combat_bar_run = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_runX, menu_combat_bar_runY, menu_combat_bar_runW, menu_combat_bar_runH, white, 'Run', menu_black, 'Arial', 40, True, False)
+
+menu_combat_bar_continue = cls.custom_label_fix_pos_center(game_display, menu_combat_bar_attackX, menu_combat_bar_attackY, menu_combat_bar_attackW, menu_combat_bar_attackH, white, 'Continue', menu_black, 'Arial', 50, True, False)
+
+
+
+
+
 
 
 
