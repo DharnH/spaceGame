@@ -54,6 +54,24 @@ class buttons_and_labels():
     def change_rectC(self, new_color):
         self.rectC = new_color
 
+    def change_rectW(self, new_W):
+        self.rectW = new_W
+
+    def change_rectH(self, new_H):
+        self.rectH  = new_H
+
+    def change_rectX(self, new_X):
+        self.rectX = new_X
+
+    def change_rectY(self, new_Y):
+        self.rectY = new_Y
+
+    def change_textX(self, new_X):
+        self.textX = new_X
+
+    def change_textY(self, new_Y):
+        self.textY = new_Y
+
 
 
 
@@ -113,6 +131,9 @@ class just_text():
 
         self.game_display.blit(text_to_show, (self.textX, self.textY))
 
+    def change_text(self, new_text):
+        self.text = new_text
+
 
 
 
@@ -150,7 +171,7 @@ class custom_label_custom_pos_center(label):
         text_font = ImageFont.truetype(font.lower() + '.ttf', size)
         current_textW, current_textH = text_font.getsize(text)
         self.textX = rectX + ((rectW - current_textW) / 2.5)
-        self.textY = rectY + ((rectH - current_textH) / 3.0)
+        self.textY = rectY + ((rectH - current_textH) / 2.5)
 
 
 
@@ -200,6 +221,8 @@ class menu_bar(label):
         self.front_barY = rectY
         if rectW * (current_nr / max_nr) > self.background_barW:
             self.front_barW = self.background_barW
+        elif rectW * (current_nr / max_nr) < 1:
+            self.front_barW = 1
         else:
             self.front_barW = rectW * (current_nr / max_nr)
         self.front_barH = rectH
@@ -264,6 +287,8 @@ class menu_bar_max(menu_bar):
 
         if self.background_barW * (self.current_nr / self.max_nr) > self.background_barW:
             self.front_barW = self.background_barW
+        elif self.background_barW * (self.current_nr / self.max_nr) < 1:
+            self.front_barW = 1
         else:
             self.front_barW = self.background_barW * (self.current_nr / self.max_nr)
         self.front_bar = pg.Rect(self.front_barX, self.front_barY, self.front_barW, self.front_barH)
@@ -303,6 +328,8 @@ class menu_bar_no_lim(menu_bar):
 
         if self.background_barW * (self.current_nr / self.max_nr) > self.background_barW:
             self.front_barW = self.background_barW
+        elif self.background_barW * (self.current_nr / self.max_nr) < 1:
+            self.front_barW = 1
         else:
             self.front_barW = self.background_barW * (self.current_nr / self.max_nr)
         self.front_bar = pg.Rect(self.front_barX, self.front_barY, self.front_barW, self.front_barH)
@@ -377,27 +404,41 @@ class combat_enemy():
 
 class weapon():
 
-    def __init__(self, name, damage, hit_chance, recharge_delay):
+    def __init__(self, name, type, damage, hit_chance, recharge_delay, recharge_current):
         self.name = name
+        self.type = type
         self.damage = damage
         self.hit_chance = hit_chance
         self.recharge_delay = recharge_delay
+        self.recharge_current = recharge_current
 
 
     def fire(self, enemy):
 
         reduction = 1 - (mf.hull_reduction(enemy.ship_hull) / 100)
         if r.randint(0, 100) < self.hit_chance:
-           enemy.change_current_sub(int(self.damage * reduction))
+           return int(self.damage * reduction)
         else:
-           pass
+           return 0
+
+    def change_current_add(self, add_nr):
+        self.recharge_current += add_nr
+
+    def change_current_set(self, set_nr):
+        self.recharge_current = set_nr
+
+    def change_current_sub(self, sub_nr):
+        if self.recharge_current - sub_nr < 0:
+            self.recharge_current = 0
+        else:
+            self.recharge_current -= sub_nr
 
 
 
 class energy_weapon(weapon):
 
-    def __init__(self, name, damage, hit_chance, recharge_delay):
-        super().__init__(name, damage, hit_chance, recharge_delay)
+    def __init__(self, name, type, damage, hit_chance, recharge_delay, recharge_current):
+        super().__init__(name, type, damage, hit_chance, recharge_delay, recharge_current)
 
 
 

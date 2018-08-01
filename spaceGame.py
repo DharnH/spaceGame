@@ -12,6 +12,8 @@ red = (255, 0, 0)
 green = (0, 255, 0)
 blue = (0, 0, 255)
 gray = (128, 128, 128)
+yellow = (255,255,0)
+dark_yellow = (204,204,0)
 menu_black = (16,16,16)
 options_black = (33, 33, 33)
 
@@ -77,28 +79,11 @@ def changeBar(bar_to_show):
 
 def showCombatBar():
 
-    j = 0
-    for i in range(0, len(ship.equipped_weapons)):
-        j += 1
-    for k in range(j, 6):
-        if k == 0:
-            menu_combat_bar_weapon1.change_text('')
-            menu_combat_bar_weapon1.change_rectC(gray)
-        if k == 1:
-            menu_combat_bar_weapon2.change_text('')
-            menu_combat_bar_weapon2.change_rectC(gray)
-        if k == 2:
-            menu_combat_bar_weapon3.change_text('')
-            menu_combat_bar_weapon3.change_rectC(gray)
-        if k == 3:
-            menu_combat_bar_weapon4.change_text('')
-            menu_combat_bar_weapon4.change_rectC(gray)
-        if k == 4:
-            menu_combat_bar_weapon5.change_text('')
-            menu_combat_bar_weapon5.change_rectC(gray)
-        if k == 5:
-            menu_combat_bar_weapon6.change_text('')
-            menu_combat_bar_weapon6.change_rectC(gray)
+    weapon_bars = [menu_combat_bar_weapon1, menu_combat_bar_weapon2, menu_combat_bar_weapon3, menu_combat_bar_weapon4, menu_combat_bar_weapon5, menu_combat_bar_weapon6]
+
+    for k in range(5, len(ship.equipped_weapons)-1, -1):
+        weapon_bars[k].change_text('')
+        weapon_bars[k].change_rectC(gray)
 
 
 
@@ -108,6 +93,7 @@ def showCombatBar():
     menu_combat_bar_weapon4.draw()
     menu_combat_bar_weapon5.draw()
     menu_combat_bar_weapon6.draw()
+    menu_combat_cancel_attack.draw()
 
 
 
@@ -423,7 +409,7 @@ def initCombat():
 
 
     combat_level_text = cls.just_text(game_display, test_rectX, test_rectY, test_rectW, test_rectH, 'Lvl. ' + str(current_enemy.level), 'center', test_rectY + 60, white, 'Arial', 20, False, True)
-    combat_hull_text = cls.just_text(game_display, test_rectX, test_rectY, test_rectW, test_rectH, current_enemy.ship_hull, 'center', test_rectY + 100, white, 'Arial', 20, False, True)
+    combat_hull_text = cls.just_text(game_display, test_rectX, test_rectY, test_rectW, test_rectH, current_enemy.ship_hull.capitalize(), 'center', test_rectY + 100, white, 'Arial', 20, False, True)
 
 
     combat_done = False
@@ -449,7 +435,7 @@ def initCombat():
                     elif menu_combat_btn.rect.collidepoint(mpos):
                         combat_done = True
 
-                if current_enemy.health_current == 0:
+                if current_enemy.health_current <= 0:
                     showCombatBar()
                     test_combat_rect.draw()
                     test_combat_health_bar.draw()
@@ -459,7 +445,7 @@ def initCombat():
                     menu_xp_bar.change_current_set(char.xp_current)
                     combat_done = True
 
-                elif current_enemy.health_current == 0:
+                elif current_enemy.health_current <= 0:
                     showCombatBar()
                     test_combat_rect.draw()
                     test_combat_health_bar.draw()
@@ -483,36 +469,137 @@ def initCombat():
 
 
 def combat_attack(current_enemy, test_combat_rect, combat_level_text, combat_hull_text, test_combat_health_bar):
+
+    weapon_bars = [menu_combat_bar_weapon1, menu_combat_bar_weapon2, menu_combat_bar_weapon3, menu_combat_bar_weapon4, menu_combat_bar_weapon5, menu_combat_bar_weapon6]
     has_attacked = False
+    draw_tooltip = []
+
+    weapon_tooltip_damage_and_rect = cls.custom_label_custom_pos_custom_text_pos(game_display, 0, 0, 0, 0, options_black, 'Damage: 50', white, 0 + 10, 0 + 10, 'Arial', 20, True, False)
+    weapon_tooltip_hit_chance = cls.just_text(game_display, 0, 0, 0, 0, 'Hit Change: 100', 0 + 35, 0 + 10, white, 'Arial', 20, True, False)
+
+    weapon_tooltip_type = cls.just_text(game_display, 0, 0, 0, 0, 'Type : ' + str(ship.equipped_weapons[0].type), 0 + 10, 0 + 60, white, 'Arial', 20, True, False)
+    weapon_tooltip_recharge_time = cls.just_text(game_display, 0, 0, 0, 0, 'Recharge time : ' + str(ship.equipped_weapons[0].recharge_delay), 0 + 10, 0 + 85, white, 'Arial', 20, True, False)
+
+    weapon_tooltip_recharge_left = cls.just_text(game_display, 0, 0, 0, 0, 'Recharge left : ' + str(ship.equipped_weapons[0].recharge_current), 0 + 10, 0 + 110, white, 'Arial', 20, True, False)
+
+    you_hit = cls.just_text(game_display, 0, 0, 0, 0, '', 300, 300, options_black, 'Arial', 200, True, False)
+
+    enemy_hit = cls.just_text(game_display, 0, 0, 0, 0, '', 300, 500, options_black, 'Arial', 200, True, False)
+
+
+
+
     while not has_attacked:
         for ev in pg.event.get():
+            mpos = pg.mouse.get_pos()
             if ev.type == pg.QUIT:
                 gv.end_game = True
                 has_attacked = True
 
             elif ev.type == pg.MOUSEBUTTONUP:
-                mpos = pg.mouse.get_pos()
                 if ev.button == 1:
                     if menu_options_btn.rect.collidepoint(mpos):
                         changeMenu('keep_options')
-
-                    elif menu_combat_bar_weapon1.rect.collidepoint(mpos):
-                        print('yes')
-                        ship.health_current - current_enemy.fire(ship.hull)
-                        menu_hp_bar.change_current_set(ship.health_current)
-                        ship.equipped_weapons[0].fire(current_enemy)
                         has_attacked = True
 
-                    elif menu_combat_bar_weapon2.rect.collidepoint(mpos):
-                        ship.health_current - current_enemy.fire(ship.hull)
-                        menu_hp_bar.change_current_set(ship.health_current)
-                        ship.equipped_weapons[1].fire(current_enemy)
+
+                    elif menu_combat_cancel_attack.rect.collidepoint(mpos):
                         has_attacked = True
+
+                    for k in range(0, len(ship.equipped_weapons)):
+                        weapon = ship.equipped_weapons[k]
+
+                        if weapon_bars[k].rect.collidepoint(mpos):
+                            enemy_damage = current_enemy.fire(ship.hull)
+                            if enemy_damage > 0:
+                                ship.health_current -= enemy_damage
+                                enemy_hit.change_text('You got hit for ' + str(enemy_damage) + '!')
+                            else:
+                                enemy_hit.change_text('He missed!')
+
+                            menu_hp_bar.change_current_set(ship.health_current)
+                            if weapon.recharge_current == 0:
+                                your_damage = weapon.fire(current_enemy)
+                                if your_damage > 0:
+                                    current_enemy.health_current -= your_damage
+                                    enemy_hit.change_text('You hit him for ' + str(enemy_damage) + '!')
+                                else:
+                                    enemy_hit.change_text('You missed!')
+
+                                for l in range(0, len(ship.equipped_weapons)):
+                                    weapon_to_reduce = ship.equipped_weapons[l]
+                                    if weapon_to_reduce.recharge_current != 0:
+                                        weapon_to_reduce.recharge_current -= 1
+                                        if weapon_to_reduce.recharge_current == 0:
+                                            weapon_bars[l].change_rectC(white)
+
+                                if weapon.recharge_delay > 0:
+                                    weapon.change_current_set(weapon.recharge_delay)
+                                    weapon_bars[k].change_rectC(yellow)
+
+                                has_attacked = True
+
+
+            elif ev.type == pg.MOUSEMOTION:
+                mX, mY = mpos
+                draw_tooltip = []
+
+                for k in range(0, len(ship.equipped_weapons)):
+
+                    weapon_tooltipW = 300
+                    if ship.equipped_weapons[k].recharge_current > 0:
+                        weapon_tooltipH = 145
+                    else:
+                        weapon_tooltipH = 125
+                    weapon_tooltipX = mX
+                    weapon_tooltipY = mY - weapon_tooltipH
+
+                    if weapon_bars[k].rect.collidepoint(mpos):
+                        weapon_tooltip_damage_and_rect = cls.custom_label_custom_pos_custom_text_pos(game_display, weapon_tooltipX, weapon_tooltipY, weapon_tooltipW, weapon_tooltipH, options_black, 'Damage: ' + str(ship.equipped_weapons[k].damage), white, weapon_tooltipX + 10, weapon_tooltipY + 10, 'Arial', 20, True, False)
+                        weapon_tooltip_hit_chance = cls.just_text(game_display, weapon_tooltipX, weapon_tooltipY, weapon_tooltipW, weapon_tooltipH, 'Hit Change: ' + str(ship.equipped_weapons[k].hit_chance), weapon_tooltipX + 10, weapon_tooltipY + 35, white, 'Arial', 20, True, False)
+                        weapon_tooltip_type = cls.just_text(game_display, weapon_tooltipX, weapon_tooltipY, weapon_tooltipW, weapon_tooltipH, 'Type : ' + str(ship.equipped_weapons[k].type), weapon_tooltipX + 10, weapon_tooltipY + 60, white, 'Arial', 20, True, False)
+                        weapon_tooltip_recharge_time = cls.just_text(game_display, weapon_tooltipX, weapon_tooltipY, weapon_tooltipW, weapon_tooltipH, 'Recharge time : ' + str(ship.equipped_weapons[k].recharge_delay), weapon_tooltipX + 10, weapon_tooltipY + 85, white, 'Arial', 20, True, False)
+                        if ship.equipped_weapons[k].recharge_current > 0:
+                            weapon_tooltip_recharge_left = cls.just_text(game_display, weapon_tooltipX, weapon_tooltipY, weapon_tooltipW, weapon_tooltipH, 'Recharge left : ' + str(ship.equipped_weapons[k].recharge_current), weapon_tooltipX + 10, weapon_tooltipY + 110, white, 'Arial', 20, True, False)
+                        else:
+                            weapon_tooltip_recharge_left.change_text('')
+                        draw_tooltip.append(True)
+
+                        '''
+                        weapon_tooltip_damage_and_rect = cls.custom_label_custom_pos_custom_text_pos(game_display, 10, 10, 100, 200, options_black, 'Damage: 50', white, 0 + 10, 0 + 10, 'Arial', 20, True, False)
+                    
+                        print(weapon_tooltip_damage_and_rect.rectW)
+                    
+                        weapon_tooltip_damage_and_rect.change_text('Damage: ' + str(ship.equipped_weapons[0].damage))
+                    
+                        weapon_tooltip_damage_and_rect.change_rectW(500)
+                    
+                        weapon_tooltip_damage_and_rect.change_rectH(500)
+                    
+                        weapon_tooltip_damage_and_rect.change_rectX(100)
+                    
+                        weapon_tooltip_damage_and_rect.change_rectY(100)
+                    
+                        weapon_tooltip_damage_and_rect.change_textX(100 + 10)
+                    
+                        weapon_tooltip_damage_and_rect.change_textY(100 + 10)
+                    
+                        weapon_tooltip_damage_and_rect.change_rectC(yellow)
+                    
+                        print(weapon_tooltip_damage_and_rect.rectW)
+                        '''
 
 
         showMenuTemplate()
         showMenuBasics()
         showCombatBar()
+        you_hit.draw()
+        if True in draw_tooltip:
+            weapon_tooltip_damage_and_rect.draw()
+            weapon_tooltip_hit_chance.draw()
+            weapon_tooltip_type.draw()
+            weapon_tooltip_recharge_time.draw()
+            weapon_tooltip_recharge_left.draw()
         test_combat_rect.draw()
         test_combat_health_bar.change_current_set(current_enemy.health_current)
         test_combat_health_bar.draw()
@@ -520,6 +607,44 @@ def combat_attack(current_enemy, test_combat_rect, combat_level_text, combat_hul
         combat_hull_text.draw()
         update()
 
+
+
+'''
+
+elif 
+
+                    outside_button = False
+                    while not outside_button:
+                        for ev in pg.event.get():
+
+                            if ev.type == pg.QUIT:
+                                gv.end_game = True
+                                has_attacked = True
+                            elif ev.type == pg.MOUSEMOTION:
+                                if weapon_bars[k].rect.collidepoint(mpos):
+                                    print('yesss')
+                                    outside_button = True
+                                else:
+                                    outside_button = True
+
+                        showMenuTemplate()
+                        showMenuBasics()
+                        showCombatBar()
+                        weapon_tooltip_damage_and_rect.draw()
+                        test_combat_rect.draw()
+                        test_combat_health_bar.change_current_set(current_enemy.health_current)
+                        test_combat_health_bar.draw()
+                        combat_level_text.draw()
+                        combat_hull_text.draw()
+                        update()
+                        
+        
+
+
+
+
+
+'''
 
 
 
@@ -622,7 +747,7 @@ menu_xp_bar = cls.menu_bar_no_lim(game_display, (menuShipX+ 0), menu_hp_bar.rect
 
 menu_combat_bar_weaponW = 300
 menu_combat_bar_weaponH = menuHeight / 3
-menu_combat_bar_weaponX = display_width / 30 * 8
+menu_combat_bar_weaponX = display_width / 30 * 6
 menu_combat_bar_weaponY = menuBotY + 20
 
 '''
@@ -634,12 +759,54 @@ menu_combat_bar_runY = menuBotY + 20
 
 
 
-menu_combat_bar_weapon1 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_weaponX, menu_combat_bar_weaponY, menu_combat_bar_weaponW, menu_combat_bar_weaponH, white, ship.equipped_weapons[0].name, menu_black, 'Arial', 20, True, False)
-menu_combat_bar_weapon2 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_weaponX, menu_combat_bar_weaponY + menuHeight / 2.2, menu_combat_bar_weaponW, menu_combat_bar_weaponH, white, ship.equipped_weapons[1].name, menu_black, 'Arial', 20, True, False)
-menu_combat_bar_weapon3 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_weaponX + 320, menu_combat_bar_weaponY, menu_combat_bar_weaponW, menu_combat_bar_weaponH, white, ship.equipped_weapons[0].name, menu_black, 'Arial', 20, True, False)
-menu_combat_bar_weapon4 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_weaponX + 320, menu_combat_bar_weaponY + menuHeight / 2.2, menu_combat_bar_weaponW, menu_combat_bar_weaponH, white, ship.equipped_weapons[1].name, menu_black, 'Arial', 20, True, False)
-menu_combat_bar_weapon5 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_weaponX + 640, menu_combat_bar_weaponY, menu_combat_bar_weaponW, menu_combat_bar_weaponH, white, ship.equipped_weapons[0].name, menu_black, 'Arial', 20, True, False)
-menu_combat_bar_weapon6 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_weaponX + 640, menu_combat_bar_weaponY + menuHeight / 2.2, menu_combat_bar_weaponW, menu_combat_bar_weaponH, white, ship.equipped_weapons[1].name, menu_black, 'Arial', 20, True, False)
+
+if 0 in range(0, len(ship.equipped_weapons)):
+    menu_combat_bar_weapon1 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_weaponX, menu_combat_bar_weaponY, menu_combat_bar_weaponW, menu_combat_bar_weaponH, white, ship.equipped_weapons[0].name, menu_black, 'Arial', 25, True, False)
+
+else:
+    menu_combat_bar_weapon1 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_weaponX, menu_combat_bar_weaponY, menu_combat_bar_weaponW, menu_combat_bar_weaponH, white, '', menu_black, 'Arial', 25, True, False)
+
+if 1 in range(0, len(ship.equipped_weapons)):
+    menu_combat_bar_weapon2 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_weaponX, menu_combat_bar_weaponY + menuHeight / 2.2, menu_combat_bar_weaponW, menu_combat_bar_weaponH, white, ship.equipped_weapons[1].name, menu_black, 'Arial', 25, True, False)
+
+else:
+    menu_combat_bar_weapon2 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_weaponX, menu_combat_bar_weaponY + menuHeight / 2.2, menu_combat_bar_weaponW, menu_combat_bar_weaponH, white, '', menu_black, 'Arial', 25, True, False)
+
+if 2 in range(0, len(ship.equipped_weapons)):
+    menu_combat_bar_weapon3 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_weaponX + 320, menu_combat_bar_weaponY, menu_combat_bar_weaponW, menu_combat_bar_weaponH, white, ship.equipped_weapons[2].name, menu_black, 'Arial', 25, True, False)
+
+else:
+    menu_combat_bar_weapon3 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_weaponX + 320, menu_combat_bar_weaponY, menu_combat_bar_weaponW, menu_combat_bar_weaponH, white, '', menu_black, 'Arial', 25, True, False)
+
+if 3 in range(0, len(ship.equipped_weapons)):
+    menu_combat_bar_weapon4 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_weaponX + 320, menu_combat_bar_weaponY + menuHeight / 2.2, menu_combat_bar_weaponW, menu_combat_bar_weaponH, white, ship.equipped_weapons[3].name, menu_black, 'Arial', 25, True, False)
+
+else:
+    menu_combat_bar_weapon4 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_weaponX + 320, menu_combat_bar_weaponY + menuHeight / 2.2, menu_combat_bar_weaponW, menu_combat_bar_weaponH, white, '', menu_black, 'Arial', 25, True, False)
+
+if 4 in range(0, len(ship.equipped_weapons)):
+    menu_combat_bar_weapon5 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_weaponX + 640, menu_combat_bar_weaponY, menu_combat_bar_weaponW, menu_combat_bar_weaponH, white, ship.equipped_weapons[4].name, menu_black, 'Arial', 25, True, False)
+
+else:
+    menu_combat_bar_weapon5 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_weaponX + 640, menu_combat_bar_weaponY, menu_combat_bar_weaponW, menu_combat_bar_weaponH, white, '', menu_black, 'Arial', 25, True, False)
+
+if 5 in range(0, len(ship.equipped_weapons)):
+    menu_combat_bar_weapon6 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_weaponX + 640, menu_combat_bar_weaponY + menuHeight / 2.2, menu_combat_bar_weaponW, menu_combat_bar_weaponH, white, ship.equipped_weapons[5].name, menu_black, 'Arial', 25, True, False)
+
+else:
+    menu_combat_bar_weapon6 = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_weaponX + 640, menu_combat_bar_weaponY + menuHeight / 2.2, menu_combat_bar_weaponW, menu_combat_bar_weaponH, white, '', menu_black, 'Arial', 25, True, False)
+
+
+menu_combat_cancel_attack = cls.custom_label_custom_pos_center(game_display, menu_combat_bar_weaponX + 960, menu_combat_bar_weaponY + menuHeight / 4, menu_combat_bar_weaponW, menu_combat_bar_weaponH, white, 'Cancel attack', menu_black, 'Arial', 30, True, False)
+
+
+
+
+
+
+
+
+
 
 
 
@@ -683,11 +850,11 @@ def mainLoop():
 
     while not gv.end_game:
         for ev in pg.event.get():
+            mpos = pg.mouse.get_pos()
             if ev.type == pg.QUIT:
                 gv.end_game = True
 
             elif ev.type == pg.MOUSEBUTTONUP:
-                mpos = pg.mouse.get_pos()
                 if ev.button == 1:
                     if menu_options_btn.rect.collidepoint(mpos):
                         changeMenu('keep_options')
@@ -695,7 +862,7 @@ def mainLoop():
                     elif name_label_custom.rect.collidepoint(mpos):
                         changeMenu('change_name')
 
-                    elif menu_combat_btn.rect.collidepoint(mpos): #TODO: CHANGE THE FUNCTIONS TO DRAW MENUS/BARS
+                    elif menu_combat_btn.rect.collidepoint(mpos):
                         changeMenu('combat_menu')
 
                     elif menu_travel_btn.rect.collidepoint(mpos):

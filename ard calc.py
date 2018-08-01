@@ -6,6 +6,6 @@ def calc(t):
         add = 100 * (c+1)
         sum = 1300 + add
         total += sum
-        print(total)
+        print(13345 / total)
 
 calc(54)
